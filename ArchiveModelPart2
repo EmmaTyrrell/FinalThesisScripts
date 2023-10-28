@@ -10745,11 +10745,30 @@ try:
                                            ["tmp_h_min", "MAX"], ["tmp_s_min", "MAX"],
                                            ["wind_min", "MAX"], ["gust_min", "MAX"],
                                            ["asnow_sfc_", "MAX"], ["ugrd_htgl_", "MAX"],
-                                           ["vgrd_htgl_", "MAX"]])
+                                           ["vgrd_htgl_", "MAX"], ["snowc_sfc_", "MAX"], ["tmp_h_mean", "MAX"]])
                 print("stats calculated")
                 arcpy.AddField_management(analysisGDB + "\\day0_max_stats", "Day", "TEXT", "", "", "10", "Day")
                 print("field added")
                 with arcpy.da.UpdateCursor(analysisGDB + "\\day0_max_stats", "Day") as cursor:
+                    for row in cursor:
+                        row[0] = "Day0"
+                        cursor.updateRow(row)
+
+                arcpy.Statistics_analysis(day0, analysisGDB + "\\day0_median_stats",
+                                          [["gust_mean", "MEDIAN"], ["sfcr_mean", "MEDIAN"], ["snod_mean", "MEDIAN"],
+                                           ["tmp_h_mean", "MEDIAN"],
+                                           ["tmp_s_mean", "MEDIAN"], ["wind_mean", "MEDIAN"], ["gust_max", "MEDIAN"],
+                                           ["sfcr_max", "MEDIAN"], ["snod_max", "MEDIAN"],
+                                           ["tmp_h_max", "MEDIAN"], ["tmp_s_max", "MEDIAN"], ["wind_max", "MEDIAN"],
+                                           ["sfcr_min", "MEDIAN"],
+                                           ["snod_min", "MEDIAN"], ["tmp_h_min", "MEDIAN"], ["tmp_s_min", "MEDIAN"],
+                                           ["wind_min", "MEDIAN"],
+                                           ["gust_min", "MEDIAN"], ["asnow_sfc_", "MEDIAN"], ["ugrd_htgl_", "MEDIAN"],
+                                           ["vgrd_htgl_", "MEDIAN"]])
+                print("stats calculated")
+                arcpy.AddField_management(analysisGDB + "\\day0_median_stats", "Day", "TEXT", "", "", "10", "Day")
+                print("field added")
+                with arcpy.da.UpdateCursor(analysisGDB + "\\day0_median_stats", "Day") as cursor:
                     for row in cursor:
                         row[0] = "Day0"
                         cursor.updateRow(row)
@@ -10801,11 +10820,29 @@ try:
                                            ["tmp_h_min", "MAX"], ["tmp_s_min", "MAX"],
                                            ["wind_min", "MAX"], ["gust_min", "MAX"],
                                            ["asnow_sfc_", "MAX"], ["ugrd_htgl_", "MAX"],
-                                           ["vgrd_htgl_", "MAX"]])
+                                           ["vgrd_htgl_", "MAX"], ["snowc_sfc_", "MAX"], ["tmp_h_mean", "MAX"]])
                 print("stats calculated")
                 arcpy.AddField_management(analysisGDB + "\\day1_max_stats", "Day", "TEXT", "", "", "10", "Day")
                 print("field added")
                 with arcpy.da.UpdateCursor(analysisGDB + "\\day1_max_stats", "Day") as cursor:
+                    for row in cursor:
+                        row[0] = "Day1"
+                        cursor.updateRow(row)
+                arcpy.Statistics_analysis(day1, analysisGDB + "\\day1_median_stats",
+                                          [["gust_mean", "MEDIAN"], ["sfcr_mean", "MEDIAN"], ["snod_mean", "MEDIAN"],
+                                           ["tmp_h_mean", "MEDIAN"],
+                                           ["tmp_s_mean", "MEDIAN"], ["wind_mean", "MEDIAN"], ["gust_max", "MEDIAN"],
+                                           ["sfcr_max", "MEDIAN"], ["snod_max", "MEDIAN"],
+                                           ["tmp_h_max", "MEDIAN"], ["tmp_s_max", "MEDIAN"], ["wind_max", "MEDIAN"],
+                                           ["sfcr_min", "MEDIAN"],
+                                           ["snod_min", "MEDIAN"], ["tmp_h_min", "MEDIAN"], ["tmp_s_min", "MEDIAN"],
+                                           ["wind_min", "MEDIAN"],
+                                           ["gust_min", "MEDIAN"], ["asnow_sfc_", "MEDIAN"], ["ugrd_htgl_", "MEDIAN"],
+                                           ["vgrd_htgl_", "MEDIAN"]])
+                print("stats calculated")
+                arcpy.AddField_management(analysisGDB + "\\day1_median_stats", "Day", "TEXT", "", "", "10", "Day")
+                print("field added")
+                with arcpy.da.UpdateCursor(analysisGDB + "\\day1_median_stats", "Day") as cursor:
                     for row in cursor:
                         row[0] = "Day1"
                         cursor.updateRow(row)
@@ -10857,11 +10894,29 @@ try:
                                            ["tmp_h_min", "MAX"], ["tmp_s_min", "MAX"],
                                            ["wind_min", "MAX"], ["gust_min", "MAX"],
                                            ["asnow_sfc_", "MAX"], ["ugrd_htgl_", "MAX"],
-                                           ["vgrd_htgl_", "MAX"]])
+                                           ["vgrd_htgl_", "MAX"], ["snowc_sfc_", "MAX"], ["tmp_h_mean", "MAX"]])
                 print("stats calculated")
                 arcpy.AddField_management(analysisGDB + "\\day2_max_stats", "Day", "TEXT", "", "", "10", "Day")
                 print("field added")
                 with arcpy.da.UpdateCursor(analysisGDB + "\\day2_max_stats", "Day") as cursor:
+                    for row in cursor:
+                        row[0] = "Day2"
+                        cursor.updateRow(row)
+                arcpy.Statistics_analysis(day2, analysisGDB + "\\day2_median_stats",
+                                          [["gust_mean", "MEDIAN"], ["sfcr_mean", "MEDIAN"], ["snod_mean", "MEDIAN"],
+                                           ["tmp_h_mean", "MEDIAN"],
+                                           ["tmp_s_mean", "MEDIAN"], ["wind_mean", "MEDIAN"], ["gust_max", "MEDIAN"],
+                                           ["sfcr_max", "MEDIAN"], ["snod_max", "MEDIAN"],
+                                           ["tmp_h_max", "MEDIAN"], ["tmp_s_max", "MEDIAN"], ["wind_max", "MEDIAN"],
+                                           ["sfcr_min", "MEDIAN"],
+                                           ["snod_min", "MEDIAN"], ["tmp_h_min", "MEDIAN"], ["tmp_s_min", "MEDIAN"],
+                                           ["wind_min", "MEDIAN"],
+                                           ["gust_min", "MEDIAN"], ["asnow_sfc_", "MEDIAN"], ["ugrd_htgl_", "MEDIAN"],
+                                           ["vgrd_htgl_", "MEDIAN"]])
+                print("stats calculated")
+                arcpy.AddField_management(analysisGDB + "\\day2_median_stats", "Day", "TEXT", "", "", "10", "Day")
+                print("field added")
+                with arcpy.da.UpdateCursor(analysisGDB + "\\day2_median_stats", "Day") as cursor:
                     for row in cursor:
                         row[0] = "Day2"
                         cursor.updateRow(row)
@@ -10913,11 +10968,29 @@ try:
                                            ["tmp_h_min", "MAX"], ["tmp_s_min", "MAX"],
                                            ["wind_min", "MAX"], ["gust_min", "MAX"],
                                            ["asnow_sfc_", "MAX"], ["ugrd_htgl_", "MAX"],
-                                           ["vgrd_htgl_", "MAX"]])
+                                           ["vgrd_htgl_", "MAX"], ["snowc_sfc_", "MAX"], ["tmp_h_mean", "MAX"]])
                 print("stats calculated")
                 arcpy.AddField_management(analysisGDB + "\\day3_max_stats", "Day", "TEXT", "", "", "10", "Day")
                 print("field added")
                 with arcpy.da.UpdateCursor(analysisGDB + "\\day3_max_stats", "Day") as cursor:
+                    for row in cursor:
+                        row[0] = "Day3"
+                        cursor.updateRow(row)
+                arcpy.Statistics_analysis(day3, analysisGDB + "\\day3_median_stats",
+                                          [["gust_mean", "MEDIAN"], ["sfcr_mean", "MEDIAN"], ["snod_mean", "MEDIAN"],
+                                           ["tmp_h_mean", "MEDIAN"],
+                                           ["tmp_s_mean", "MEDIAN"], ["wind_mean", "MEDIAN"], ["gust_max", "MEDIAN"],
+                                           ["sfcr_max", "MEDIAN"], ["snod_max", "MEDIAN"],
+                                           ["tmp_h_max", "MEDIAN"], ["tmp_s_max", "MEDIAN"], ["wind_max", "MEDIAN"],
+                                           ["sfcr_min", "MEDIAN"],
+                                           ["snod_min", "MEDIAN"], ["tmp_h_min", "MEDIAN"], ["tmp_s_min", "MEDIAN"],
+                                           ["wind_min", "MEDIAN"],
+                                           ["gust_min", "MEDIAN"], ["asnow_sfc_", "MEDIAN"], ["ugrd_htgl_", "MEDIAN"],
+                                           ["vgrd_htgl_", "MEDIAN"]])
+                print("stats calculated")
+                arcpy.AddField_management(analysisGDB + "\\day3_median_stats", "Day", "TEXT", "", "", "10", "Day")
+                print("field added")
+                with arcpy.da.UpdateCursor(analysisGDB + "\\day3_median_stats", "Day") as cursor:
                     for row in cursor:
                         row[0] = "Day3"
                         cursor.updateRow(row)
@@ -10969,11 +11042,29 @@ try:
                                            ["tmp_h_min", "MAX"], ["tmp_s_min", "MAX"],
                                            ["wind_min", "MAX"], ["gust_min", "MAX"],
                                            ["asnow_sfc_", "MAX"], ["ugrd_htgl_", "MAX"],
-                                           ["vgrd_htgl_", "MAX"]])
+                                           ["vgrd_htgl_", "MAX"], ["snowc_sfc_", "MAX"], ["tmp_h_mean", "MAX"]])
                 print("stats calculated")
                 arcpy.AddField_management(analysisGDB + "\\day4_max_stats", "Day", "TEXT", "", "", "10", "Day")
                 print("field added")
                 with arcpy.da.UpdateCursor(analysisGDB + "\\day4_max_stats", "Day") as cursor:
+                    for row in cursor:
+                        row[0] = "Day4"
+                        cursor.updateRow(row)
+                arcpy.Statistics_analysis(day4, analysisGDB + "\\day4_median_stats",
+                                          [["gust_mean", "MEDIAN"], ["sfcr_mean", "MEDIAN"], ["snod_mean", "MEDIAN"],
+                                           ["tmp_h_mean", "MEDIAN"],
+                                           ["tmp_s_mean", "MEDIAN"], ["wind_mean", "MEDIAN"], ["gust_max", "MEDIAN"],
+                                           ["sfcr_max", "MEDIAN"], ["snod_max", "MEDIAN"],
+                                           ["tmp_h_max", "MEDIAN"], ["tmp_s_max", "MEDIAN"], ["wind_max", "MEDIAN"],
+                                           ["sfcr_min", "MEDIAN"],
+                                           ["snod_min", "MEDIAN"], ["tmp_h_min", "MEDIAN"], ["tmp_s_min", "MEDIAN"],
+                                           ["wind_min", "MEDIAN"],
+                                           ["gust_min", "MEDIAN"], ["asnow_sfc_", "MEDIAN"], ["ugrd_htgl_", "MEDIAN"],
+                                           ["vgrd_htgl_", "MEDIAN"]])
+                print("stats calculated")
+                arcpy.AddField_management(analysisGDB + "\\day4_median_stats", "Day", "TEXT", "", "", "10", "Day")
+                print("field added")
+                with arcpy.da.UpdateCursor(analysisGDB + "\\day4_median_stats", "Day") as cursor:
                     for row in cursor:
                         row[0] = "Day4"
                         cursor.updateRow(row)
@@ -11025,11 +11116,29 @@ try:
                                            ["tmp_h_min", "MAX"], ["tmp_s_min", "MAX"],
                                            ["wind_min", "MAX"], ["gust_min", "MAX"],
                                            ["asnow_sfc_", "MAX"], ["ugrd_htgl_", "MAX"],
-                                           ["vgrd_htgl_", "MAX"]])
+                                           ["vgrd_htgl_", "MAX"], ["snowc_sfc_", "MAX"], ["tmp_h_mean", "MAX"]])
                 print("stats calculated")
                 arcpy.AddField_management(analysisGDB + "\\day5_max_stats", "Day", "TEXT", "", "", "10", "Day")
                 print("field added")
                 with arcpy.da.UpdateCursor(analysisGDB + "\\day5_max_stats", "Day") as cursor:
+                    for row in cursor:
+                        row[0] = "Day5"
+                        cursor.updateRow(row)
+                arcpy.Statistics_analysis(day5, analysisGDB + "\\day5_median_stats",
+                                          [["gust_mean", "MEDIAN"], ["sfcr_mean", "MEDIAN"], ["snod_mean", "MEDIAN"],
+                                           ["tmp_h_mean", "MEDIAN"],
+                                           ["tmp_s_mean", "MEDIAN"], ["wind_mean", "MEDIAN"], ["gust_max", "MEDIAN"],
+                                           ["sfcr_max", "MEDIAN"], ["snod_max", "MEDIAN"],
+                                           ["tmp_h_max", "MEDIAN"], ["tmp_s_max", "MEDIAN"], ["wind_max", "MEDIAN"],
+                                           ["sfcr_min", "MEDIAN"],
+                                           ["snod_min", "MEDIAN"], ["tmp_h_min", "MEDIAN"], ["tmp_s_min", "MEDIAN"],
+                                           ["wind_min", "MEDIAN"],
+                                           ["gust_min", "MEDIAN"], ["asnow_sfc_", "MEDIAN"], ["ugrd_htgl_", "MEDIAN"],
+                                           ["vgrd_htgl_", "MEDIAN"]])
+                print("stats calculated")
+                arcpy.AddField_management(analysisGDB + "\\day5_median_stats", "Day", "TEXT", "", "", "10", "Day")
+                print("field added")
+                with arcpy.da.UpdateCursor(analysisGDB + "\\day5_median_stats", "Day") as cursor:
                     for row in cursor:
                         row[0] = "Day5"
                         cursor.updateRow(row)
@@ -11081,11 +11190,29 @@ try:
                                            ["tmp_h_min", "MAX"], ["tmp_s_min", "MAX"],
                                            ["wind_min", "MAX"], ["gust_min", "MAX"],
                                            ["asnow_sfc_", "MAX"], ["ugrd_htgl_", "MAX"],
-                                           ["vgrd_htgl_", "MAX"]])
+                                           ["vgrd_htgl_", "MAX"], ["snowc_sfc_", "MAX"], ["tmp_h_mean", "MAX"]])
                 print("stats calculated")
                 arcpy.AddField_management(analysisGDB + "\\day6_max_stats", "Day", "TEXT", "", "", "10", "Day")
                 print("field added")
                 with arcpy.da.UpdateCursor(analysisGDB + "\\day6_max_stats", "Day") as cursor:
+                    for row in cursor:
+                        row[0] = "Day6"
+                        cursor.updateRow(row)
+                arcpy.Statistics_analysis(day6, analysisGDB + "\\day6_median_stats",
+                                          [["gust_mean", "MEDIAN"], ["sfcr_mean", "MEDIAN"], ["snod_mean", "MEDIAN"],
+                                           ["tmp_h_mean", "MEDIAN"],
+                                           ["tmp_s_mean", "MEDIAN"], ["wind_mean", "MEDIAN"], ["gust_max", "MEDIAN"],
+                                           ["sfcr_max", "MEDIAN"], ["snod_max", "MEDIAN"],
+                                           ["tmp_h_max", "MEDIAN"], ["tmp_s_max", "MEDIAN"], ["wind_max", "MEDIAN"],
+                                           ["sfcr_min", "MEDIAN"],
+                                           ["snod_min", "MEDIAN"], ["tmp_h_min", "MEDIAN"], ["tmp_s_min", "MEDIAN"],
+                                           ["wind_min", "MEDIAN"],
+                                           ["gust_min", "MEDIAN"], ["asnow_sfc_", "MEDIAN"], ["ugrd_htgl_", "MEDIAN"],
+                                           ["vgrd_htgl_", "MEDIAN"]])
+                print("stats calculated")
+                arcpy.AddField_management(analysisGDB + "\\day6_median_stats", "Day", "TEXT", "", "", "10", "Day")
+                print("field added")
+                with arcpy.da.UpdateCursor(analysisGDB + "\\day6_median_stats", "Day") as cursor:
                     for row in cursor:
                         row[0] = "Day6"
                         cursor.updateRow(row)
@@ -11137,11 +11264,29 @@ try:
                                            ["tmp_h_min", "MAX"], ["tmp_s_min", "MAX"],
                                            ["wind_min", "MAX"], ["gust_min", "MAX"],
                                            ["asnow_sfc_", "MAX"], ["ugrd_htgl_", "MAX"],
-                                           ["vgrd_htgl_", "MAX"]])
+                                           ["vgrd_htgl_", "MAX"], ["snowc_sfc_", "MAX"], ["tmp_h_mean", "MAX"]])
                 print("stats calculated")
                 arcpy.AddField_management(analysisGDB + "\\day7_max_stats", "Day", "TEXT", "", "", "10", "Day")
                 print("field added")
                 with arcpy.da.UpdateCursor(analysisGDB + "\\day7_max_stats", "Day") as cursor:
+                    for row in cursor:
+                        row[0] = "Day7"
+                        cursor.updateRow(row)
+                arcpy.Statistics_analysis(day7, analysisGDB + "\\day7_median_stats",
+                                          [["gust_mean", "MEDIAN"], ["sfcr_mean", "MEDIAN"], ["snod_mean", "MEDIAN"],
+                                           ["tmp_h_mean", "MEDIAN"],
+                                           ["tmp_s_mean", "MEDIAN"], ["wind_mean", "MEDIAN"], ["gust_max", "MEDIAN"],
+                                           ["sfcr_max", "MEDIAN"], ["snod_max", "MEDIAN"],
+                                           ["tmp_h_max", "MEDIAN"], ["tmp_s_max", "MEDIAN"], ["wind_max", "MEDIAN"],
+                                           ["sfcr_min", "MEDIAN"],
+                                           ["snod_min", "MEDIAN"], ["tmp_h_min", "MEDIAN"], ["tmp_s_min", "MEDIAN"],
+                                           ["wind_min", "MEDIAN"],
+                                           ["gust_min", "MEDIAN"], ["asnow_sfc_", "MEDIAN"], ["ugrd_htgl_", "MEDIAN"],
+                                           ["vgrd_htgl_", "MEDIAN"]])
+                print("stats calculated")
+                arcpy.AddField_management(analysisGDB + "\\day7_median_stats", "Day", "TEXT", "", "", "10", "Day")
+                print("field added")
+                with arcpy.da.UpdateCursor(analysisGDB + "\\day7_median_stats", "Day") as cursor:
                     for row in cursor:
                         row[0] = "Day7"
                         cursor.updateRow(row)
@@ -11169,6 +11314,12 @@ try:
 
             # merge min stats
             arcpy.Merge_management(
+                [analysisGDB + "\\day0_median_stats", analysisGDB + "\\day1_median_stats", analysisGDB + "\\day2_median_stats",
+                 analysisGDB + "\\day3_median_stats", analysisGDB + "\\day4_median_stats", analysisGDB + "\\day5_median_stats",
+                 analysisGDB + "\\day6_median_stats", analysisGDB + "\\day7_median_stats"], analysisGDB + "\\Median_Stats")
+            print("median stats merged")
+
+            arcpy.Merge_management(
                 [analysisGDB + "\\day0_min_stats", analysisGDB + "\\day1_min_stats", analysisGDB + "\\day2_min_stats",
                  analysisGDB + "\\day3_min_stats", analysisGDB + "\\day4_min_stats", analysisGDB + "\\day5_min_stats",
                  analysisGDB + "\\day6_min_stats", analysisGDB + "\\day7_min_stats"], analysisGDB + "\\Min_Stats")
@@ -11188,7 +11339,12 @@ try:
                  analysisGDB + "\\day6_mean_stats",
                  analysisGDB + "\\day7_mean_stats", analysisGDB + "\\day0_min_stats", analysisGDB + "\\day1_min_stats",
                  analysisGDB + "\\day2_min_stats", analysisGDB + "\\day3_min_stats", analysisGDB + "\\day4_min_stats",
-                 analysisGDB + "\\day5_min_stats", analysisGDB + "\\day6_min_stats", analysisGDB + "\\day7_min_stats"])
+                 analysisGDB + "\\day5_min_stats", analysisGDB + "\\day6_min_stats", analysisGDB + "\\day7_min_stats",
+                 analysisGDB + "\\day0_median_stats", analysisGDB + "\\day1_median_stats",
+                 analysisGDB + "\\day2_median_stats",
+                 analysisGDB + "\\day3_median_stats", analysisGDB + "\\day4_median_stats",
+                 analysisGDB + "\\day5_median_stats",
+                 analysisGDB + "\\day6_median_stats", analysisGDB + "\\day7_median_stats"])
             print("delete intermediary files ")
         except Exception as ex:
             print(ex)
@@ -11197,478 +11353,4 @@ try:
 except Exception as ex:
     print(ex)
 
-print("standardizing data ... ")
-# standardize data:
-try:
-    try:
-        arcpy.StandardizeField_management(analysisGDB + "\\Day0_Data", [["gust_max"], ["wind_mean"], ["asnow_sfc_"]],
-                                          "Z-SCORE")
-        arcpy.StandardizeField_management(analysisGDB + "\\Day1_Data", [["gust_max"], ["wind_mean"], ["asnow_sfc_"]],
-                                          "Z-SCORE")
-        arcpy.StandardizeField_management(analysisGDB + "\\Day2_Data", [["gust_max"], ["wind_mean"], ["asnow_sfc_"]],
-                                          "Z-SCORE")
-        arcpy.StandardizeField_management(analysisGDB + "\\Day3_Data", [["gust_max"], ["wind_mean"], ["asnow_sfc_"]],
-                                          "Z-SCORE")
-        arcpy.StandardizeField_management(analysisGDB + "\\Day4_Data", [["gust_max"], ["wind_mean"], ["asnow_sfc_"]],
-                                          "Z-SCORE")
-        arcpy.StandardizeField_management(analysisGDB + "\\Day5_Data", [["gust_max"], ["wind_mean"], ["asnow_sfc_"]],
-                                          "Z-SCORE")
-        arcpy.StandardizeField_management(analysisGDB + "\\Day6_Data", [["gust_max"], ["wind_mean"], ["asnow_sfc_"]],
-                                          "Z-SCORE")
-        arcpy.StandardizeField_management(analysisGDB + "\\Day7_Data", [["gust_max"], ["wind_mean"], ["asnow_sfc_"]],
-                                          "Z-SCORE")
-        print("data standardized")
-    except Exception as ex:
-        print(ex)
-    # select data greater than
-    try:
-        cleanDays0 = arcpy.SelectLayerByAttribute_management(analysisGDB + "\\Day0_Data", "NEW_SELECTION",
-                                                                                          '"gust_max_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays0, "SUBSET_SELECTION",
-                                                            '"gust_max_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays0, "SUBSET_SELECTION",
-                                                            '"wind_mean_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays0, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays0, "SUBSET_SELECTION",
-                                                            '"asnow_sfc__Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays0, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" <= 2')
-        arcpy.CopyFeatures_management(cleanDays0, analysisGDB + "\\Day0_Std")
-        print("selected std Day 0 features")
 
-        cleanDays1 = arcpy.SelectLayerByAttribute_management(analysisGDB + "\\Day1_Data", "NEW_SELECTION",
-                                                             '"gust_max_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays1, "SUBSET_SELECTION",
-                                                '"gust_max_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays1, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays1, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays1, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays1, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" <= 2')
-        arcpy.CopyFeatures_management(cleanDays1, analysisGDB + "\\Day1_Std")
-        print("selected std Day 1 features")
-
-        cleanDays2 = arcpy.SelectLayerByAttribute_management(analysisGDB + "\\Day2_Data", "NEW_SELECTION",
-                                                             '"gust_max_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays2, "SUBSET_SELECTION",
-                                                '"gust_max_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays2, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays2, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays2, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays2, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" <= 2')
-        arcpy.CopyFeatures_management(cleanDays2, analysisGDB + "\\Day2_Std")
-        print("selected std Day 2 features")
-
-        cleanDays3 = arcpy.SelectLayerByAttribute_management(analysisGDB + "\\Day3_Data", "NEW_SELECTION",
-                                                             '"gust_max_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays3, "SUBSET_SELECTION",
-                                                '"gust_max_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays3, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays3, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays3, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays3, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" <= 2')
-        arcpy.CopyFeatures_management(cleanDays3, analysisGDB + "\\Day3_Std")
-        print("selected std Day 3 features")
-
-        cleanDays4 = arcpy.SelectLayerByAttribute_management(analysisGDB + "\\Day4_Data", "NEW_SELECTION",
-                                                             '"gust_max_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays4, "SUBSET_SELECTION",
-                                                '"gust_max_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays4, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays4, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays4, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays4, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" <= 2')
-        arcpy.CopyFeatures_management(cleanDays4, analysisGDB + "\\Day4_Std")
-        print("selected std Day 4 features")
-
-        cleanDays5 = arcpy.SelectLayerByAttribute_management(analysisGDB + "\\Day5_Data", "NEW_SELECTION",
-                                                             '"gust_max_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays5, "SUBSET_SELECTION",
-                                                '"gust_max_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays5, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays5, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays5, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays5, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" <= 2')
-        arcpy.CopyFeatures_management(cleanDays5, analysisGDB + "\\Day5_Std")
-        print("selected std Day 5 features")
-
-        cleanDays6 = arcpy.SelectLayerByAttribute_management(analysisGDB + "\\Day6_Data", "NEW_SELECTION",
-                                                             '"gust_max_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays6, "SUBSET_SELECTION",
-                                                '"gust_max_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays6, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays6, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays6, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays6, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" <= 2')
-        arcpy.CopyFeatures_management(cleanDays6, analysisGDB + "\\Day6_Std")
-        print("selected std Day 6 features")
-
-        cleanDays7 = arcpy.SelectLayerByAttribute_management(analysisGDB + "\\Day7_Data", "NEW_SELECTION",
-                                                             '"gust_max_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays7, "SUBSET_SELECTION",
-                                                '"gust_max_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays7, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays7, "SUBSET_SELECTION",
-                                                '"wind_mean_Z_SCORE" <= 2')
-        arcpy.SelectLayerByAttribute_management(cleanDays7, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" >= -2')
-        arcpy.SelectLayerByAttribute_management(cleanDays7, "SUBSET_SELECTION",
-                                                '"asnow_sfc__Z_SCORE" <= 2')
-        arcpy.CopyFeatures_management(cleanDays7, analysisGDB + "\\Day7_Std")
-        print("selected std Day 7 features")
-    except Exception as ex:
-        print(ex)
-    # calculate mean stats on standardized data
-    try:
-        try:
-            # day 0
-            arcpy.Statistics_analysis(analysisGDB + "\\Day0_Std", analysisGDB + "\\day0_STDMean_stats",
-                                      [["gust_max", "MEAN"], ["wind_mean", "MEAN"], ["asnow_sfc_", "MEAN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day0_STDMean_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day0_STDMean_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day0"
-                    cursor.updateRow(row)
-
-            # day 1
-            arcpy.Statistics_analysis(analysisGDB + "\\Day1_Std", analysisGDB + "\\day1_STDMean_stats",
-                                      [["gust_max", "MEAN"], ["wind_mean", "MEAN"], ["asnow_sfc_", "MEAN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day1_STDMean_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day1_STDMean_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day1"
-                    cursor.updateRow(row)
-
-            # day 2
-            arcpy.Statistics_analysis(analysisGDB + "\\Day2_Std", analysisGDB + "\\day2_STDMean_stats",
-                                      [["gust_max", "MEAN"], ["wind_mean", "MEAN"], ["asnow_sfc_", "MEAN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day2_STDMean_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day2_STDMean_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day2"
-                    cursor.updateRow(row)
-
-            # day 3
-            arcpy.Statistics_analysis(analysisGDB + "\\Day3_Std", analysisGDB + "\\day3_STDMean_stats",
-                                      [["gust_max", "MEAN"], ["wind_mean", "MEAN"], ["asnow_sfc_", "MEAN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day3_STDMean_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day3_STDMean_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day3"
-                    cursor.updateRow(row)
-
-            # day 4
-            arcpy.Statistics_analysis(analysisGDB + "\\Day4_Std", analysisGDB + "\\day4_STDMean_stats",
-                                      [["gust_max", "MEAN"], ["wind_mean", "MEAN"], ["asnow_sfc_", "MEAN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day4_STDMean_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day4_STDMean_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day4"
-                    cursor.updateRow(row)
-
-            # day 5
-            arcpy.Statistics_analysis(analysisGDB + "\\Day5_Std", analysisGDB + "\\day5_STDMean_stats",
-                                      [["gust_max", "MEAN"], ["wind_mean", "MEAN"], ["asnow_sfc_", "MEAN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day5_STDMean_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day5_STDMean_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day5"
-                    cursor.updateRow(row)
-
-            # day 6
-            arcpy.Statistics_analysis(analysisGDB + "\\Day6_Std", analysisGDB + "\\day6_STDMean_stats",
-                                      [["gust_max", "MEAN"], ["wind_mean", "MEAN"], ["asnow_sfc_", "MEAN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day6_STDMean_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day6_STDMean_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day6"
-                    cursor.updateRow(row)
-
-            # day 7
-            arcpy.Statistics_analysis(analysisGDB + "\\Day7_Std", analysisGDB + "\\day7_STDMean_stats",
-                                      [["gust_max", "MEAN"], ["wind_mean", "MEAN"], ["asnow_sfc_", "MEAN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day7_STDMean_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day7_STDMean_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day7"
-                    cursor.updateRow(row)
-        except Exception as ex:
-            print(ex)
-    except Exception as ex:
-        print(ex)
-    # calculate minimum stats on standardized data
-    try:
-        try:
-            # day 0
-            arcpy.Statistics_analysis(analysisGDB + "\\Day0_Std", analysisGDB + "\\day0_STDMin_stats",
-                                      [["gust_max", "MIN"], ["wind_mean", "MIN"], ["asnow_sfc_", "MIN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day0_STDMin_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day0_STDMin_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day0"
-                    cursor.updateRow(row)
-
-            # day 1
-            arcpy.Statistics_analysis(analysisGDB + "\\Day1_Std", analysisGDB + "\\day1_STDMin_stats",
-                                      [["gust_max", "MIN"], ["wind_mean", "MIN"], ["asnow_sfc_", "MIN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day1_STDMin_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day1_STDMin_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day1"
-                    cursor.updateRow(row)
-
-            # day 2
-            arcpy.Statistics_analysis(analysisGDB + "\\Day2_Std", analysisGDB + "\\day2_STDMin_stats",
-                                      [["gust_max", "MIN"], ["wind_mean", "MIN"], ["asnow_sfc_", "MIN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day2_STDMin_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day2_STDMin_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day2"
-                    cursor.updateRow(row)
-
-            # day 3
-            arcpy.Statistics_analysis(analysisGDB + "\\Day3_Std", analysisGDB + "\\day3_STDMin_stats",
-                                      [["gust_max", "MIN"], ["wind_mean", "MIN"], ["asnow_sfc_", "MIN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day3_STDMin_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day3_STDMin_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day3"
-                    cursor.updateRow(row)
-
-            # day 4
-            arcpy.Statistics_analysis(analysisGDB + "\\Day4_Std", analysisGDB + "\\day4_STDMin_stats",
-                                      [["gust_max", "MIN"], ["wind_mean", "MIN"], ["asnow_sfc_", "MIN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day4_STDMin_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day4_STDMin_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day4"
-                    cursor.updateRow(row)
-
-            # day 5
-            arcpy.Statistics_analysis(analysisGDB + "\\Day5_Std", analysisGDB + "\\day5_STDMin_stats",
-                                      [["gust_max", "MIN"], ["wind_mean", "MIN"], ["asnow_sfc_", "MIN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day5_STDMin_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day5_STDMin_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day5"
-                    cursor.updateRow(row)
-
-            # day 6
-            arcpy.Statistics_analysis(analysisGDB + "\\Day6_Std", analysisGDB + "\\day6_STDMin_stats",
-                                      [["gust_max", "MIN"], ["wind_mean", "MIN"], ["asnow_sfc_", "MIN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day6_STDMin_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day6_STDMin_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day6"
-                    cursor.updateRow(row)
-
-            # day 7
-            arcpy.Statistics_analysis(analysisGDB + "\\Day7_Std", analysisGDB + "\\day7_STDMin_stats",
-                                      [["gust_max", "MIN"], ["wind_mean", "MIN"], ["asnow_sfc_", "MIN"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day7_STDMin_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day7_STDMin_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day7"
-                    cursor.updateRow(row)
-        except Exception as ex:
-            print(ex)
-    except Exception as ex:
-        print(ex)
-    # calculate maximum stats on standardized data
-    try:
-        try:
-            # day 0
-            arcpy.Statistics_analysis(analysisGDB + "\\Day0_Std", analysisGDB + "\\day0_STDMax_stats",
-                                      [["gust_max", "MAX"], ["wind_mean", "MAX"], ["asnow_sfc_", "MAX"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day0_STDMax_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day0_STDMax_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day0"
-                    cursor.updateRow(row)
-
-            # day 1
-            arcpy.Statistics_analysis(analysisGDB + "\\Day1_Std", analysisGDB + "\\day1_STDMax_stats",
-                                      [["gust_max", "MAX"], ["wind_mean", "MAX"], ["asnow_sfc_", "MAX"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day1_STDMax_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day1_STDMax_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day1"
-                    cursor.updateRow(row)
-
-            # day 2
-            arcpy.Statistics_analysis(analysisGDB + "\\Day2_Std", analysisGDB + "\\day2_STDMax_stats",
-                                      [["gust_max", "MAX"], ["wind_mean", "MAX"], ["asnow_sfc_", "MAX"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day2_STDMax_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day2_STDMax_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day2"
-                    cursor.updateRow(row)
-
-            # day 3
-            arcpy.Statistics_analysis(analysisGDB + "\\Day3_Std", analysisGDB + "\\day3_STDMax_stats",
-                                      [["gust_max", "MAX"], ["wind_mean", "MAX"], ["asnow_sfc_", "MAX"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day3_STDMax_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day3_STDMax_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day3"
-                    cursor.updateRow(row)
-
-            # day 4
-            arcpy.Statistics_analysis(analysisGDB + "\\Day4_Std", analysisGDB + "\\day4_STDMax_stats",
-                                      [["gust_max", "MAX"], ["wind_mean", "MAX"], ["asnow_sfc_", "MAX"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day4_STDMax_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day4_STDMax_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day4"
-                    cursor.updateRow(row)
-            # day 5
-            arcpy.Statistics_analysis(analysisGDB + "\\Day5_Std", analysisGDB + "\\day5_STDMax_stats",
-                                      [["gust_max", "MAX"], ["wind_mean", "MAX"], ["asnow_sfc_", "MAX"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day5_STDMax_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day5_STDMax_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day5"
-                    cursor.updateRow(row)
-
-            # day 6
-            arcpy.Statistics_analysis(analysisGDB + "\\Day6_Std", analysisGDB + "\\day6_STDMax_stats",
-                                      [["gust_max", "MAX"], ["wind_mean", "MAX"], ["asnow_sfc_", "MAX"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day6_STDMax_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day6_STDMax_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day6"
-                    cursor.updateRow(row)
-
-            # day 7
-            arcpy.Statistics_analysis(analysisGDB + "\\Day7_Std", analysisGDB + "\\day7_STDMax_stats",
-                                      [["gust_max", "MAX"], ["wind_mean", "MAX"], ["asnow_sfc_", "MAX"]])
-            print("stats calculated")
-            arcpy.AddField_management(analysisGDB + "\\day7_STDMax_stats", "Day", "TEXT", "", "", "10", "Day")
-            print("field added")
-            with arcpy.da.UpdateCursor(analysisGDB + "\\day7_STDMax_stats", "Day") as cursor:
-                for row in cursor:
-                    row[0] = "Day7"
-                    cursor.updateRow(row)
-        except Exception as ex:
-            print(ex)
-    except Exception as ex:
-        print(ex)
-    # merge mean stats on standardized data
-    try:
-        # mean stats
-        try:
-            arcpy.Merge_management([analysisGDB + "\\day0_STDMean_stats", analysisGDB + "\\day1_STDMean_stats",
-                                    analysisGDB + "\\day2_STDMean_stats", analysisGDB + "\\day3_STDMean_stats",
-                                    analysisGDB + "\\day4_STDMean_stats", analysisGDB + "\\day5_STDMean_stats",
-                                    analysisGDB + "\\day6_STDMean_stats", analysisGDB + "\\day7_STDMean_stats"],
-                                   analysisGDB + "\\Mean_STD_Stats")
-            print("mean stats merged")
-            # max statistics
-
-            arcpy.Merge_management([analysisGDB + "\\day0_STDMin_stats", analysisGDB + "\\day1_STDMin_stats",
-                                    analysisGDB + "\\day2_STDMin_stats", analysisGDB + "\\day3_STDMin_stats",
-                                    analysisGDB + "\\day4_STDMin_stats", analysisGDB + "\\day5_STDMin_stats",
-                                    analysisGDB + "\\day6_STDMin_stats", analysisGDB + "\\day7_STDMin_stats"],
-                                   analysisGDB + "\\Min_STD_Stats")
-            print("min stats merged")
-
-            # merge max snow stats
-            arcpy.Merge_management([analysisGDB + "\\day0_STDMax_stats", analysisGDB + "\\day1_STDMax_stats",
-                                    analysisGDB + "\\day2_STDMax_stats", analysisGDB + "\\day3_STDMax_stats",
-                                    analysisGDB + "\\day4_STDMax_stats", analysisGDB + "\\day5_STDMax_stats",
-                                    analysisGDB + "\\day6_STDMax_stats", analysisGDB + "\\day7_STDMax_stats"],
-                                   analysisGDB + "\\Max_STD_Stats")
-            print("max stats merged")
-        except Exception as ex:
-            print(ex)
-        try:
-            arcpy.Delete_management([analysisGDB + "\\day0_STDMax_stats", analysisGDB + "\\day1_STDMax_stats",
-                                     analysisGDB + "\\day2_STDMax_stats", analysisGDB + "\\day3_STDMax_stats",
-                                     analysisGDB + "\\day4_STDMax_stats", analysisGDB + "\\day5_STDMax_stats",
-                                     analysisGDB + "\\day6_STDMax_stats", analysisGDB + "\\day7_STDMax_stats",
-                                     analysisGDB + "\\day0_STDMean_stats", analysisGDB + "\\day1_STDMean_stats",
-                                     analysisGDB + "\\day2_STDMean_stats", analysisGDB + "\\day3_STDMean_stats",
-                                     analysisGDB + "\\day4_STDMean_stats", analysisGDB + "\\day5_STDMean_stats",
-                                     analysisGDB + "\\day6_STDMean_stats", analysisGDB + "\\day7_STDMean_stats",
-                                     analysisGDB + "\\day0_STDMin_stats", analysisGDB + "\\day1_STDMin_stats",
-                                     analysisGDB + "\\day2_STDMin_stats", analysisGDB + "\\day3_STDMin_stats",
-                                     analysisGDB + "\\day4_STDMin_stats", analysisGDB + "\\day5_STDMin_stats",
-                                     analysisGDB + "\\day6_STDMin_stats", analysisGDB + "\\day7_STDMin_stats"])
-            print("delete intermediary files ")
-        except Exception as ex:
-            print(ex)
-    except Exception as ex:
-        print(ex)
-except Exception as ex:
-    print(ex)
