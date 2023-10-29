@@ -1,1 +1,475 @@
-# highway tktk after FVI applied from BLR
+# By Emma Tyrrell
+#
+# Completed  for Master's Thesis in Spatial Data Science at Penn State University.
+
+# Description: This script is part 4 of a 5 part process that applies the Forecast Value Index (FVI) to NatHA. Summary 
+# statistics are then performed on the FVI to find the miniumum, maximum, mean, and median of this value, this will be 
+# used for the forecasting template. 
+#
+# Data Sources: Colorado Avalanche Information Center, National Oceanic
+# and Atmospheric Association - High-Resolution Rapid Refresh Model,
+# Esri ArcGIS Pro.
+#######################################################################################################################
+# import modules
+import arcpy
+import os
+from arcpy.sa import *
+from datetime import timedelta
+from datetime import datetime as dt
+print("modules imported")
+
+#######################################################################################################################
+# Set parameters
+#######################################################################################################################
+# import parameters
+arcpy.env.workspace = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData"
+avyGDB = arcpy.env.workspace + "\\AvalancheFiles.gdb"
+sampledGDB = "D:\\PSU_Thesis_Data\\IntermediaryProcessingFiles\\HighwayAvy_Sampled.gdb"
+HRRRData = arcpy.env.workspace + "\\HRRRData"
+AvyDataWorkspace = arcpy.env.workspace + "\\AvyData\\Highway_AvyDaysData"
+AnalysisData = "D:\\PSU_Thesis_Data\\IntermediaryProcessingFiles\\Highway_AnalysisData"
+analysisGDB = arcpy.env.workspace + "\\HighwayAvy_AnalysisData.gdb"
+GLRM_GDB = arcpy.env.workspace + "\\GLRM_Database.gdb"
+arcpy.env.overwriteOutput = True
+arcpy.env.qualifiedFieldNames = False
+avalancheData = arcpy.env.workspace + "\\AvalancheFiles.gdb\\AvalanchePoints_Natural_CopiedToFinal"
+UTCtimeConversion = timedelta(hours=-7)
+PCSsr = arcpy.SpatialReference(6431)
+print("parameters established")
+
+
+print("process to create coefficient")
+try:
+    analysisGDB = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\HighwayAvy_AnalysisData.gdb"
+    try:
+        # copy field to variable coefficient field
+        totalVariables = analysisGDB + "\\Day0_Data"
+        # add day0 coEx field
+        arcpy.AddField_management(totalVariables, "CoEf_D0All", "DOUBLE", "", "", "", "CoEf_D0All")
+        print("field added")
+        # run update cursor to establish values:
+        with arcpy.da.UpdateCursor(totalVariables, ["asnow_sfc_", "wind_mean", "gust_max", "snowc_sfc_", "tmp_h_mean", "CoEf_D0All"]) as cursor:
+            for row in cursor:
+                row[5] = (31.21618 * ((float(row[0]))/3.20527)) + (11.44559 * ((float(row[1]))/13.618928)) + (13.52491 * ((float(row[2]))/28.581961)) + (13.76793 * ((float(row[3]))/1900))
+                cursor.updateRow(row)
+
+        # copy field to variable coefficient field
+        totalVariables1 = analysisGDB + "\\Day1_Data"
+        # add day0 coEx field
+        arcpy.AddField_management(totalVariables1, "CoEf_D1All", "DOUBLE", "", "", "", "CoEf_D1All")
+        print("field added")
+        # run update cursor to establish values:
+        with arcpy.da.UpdateCursor(totalVariables1, ["asnow_sfc_", "wind_mean", "gust_max", "snowc_sfc_", "CoEf_D1All"]) as cursor:
+            for row in cursor:
+                row[4] = (32.94445 * ((float(row[0]))/3.19957)) + (15.58937 * ((float(row[1]))/11.193928)) + (17.16771 * ((float(row[2]))/22.08099)) + (14.14494 * ((float(row[3]))/2100))
+                cursor.updateRow(row)
+
+        # copy field to variable coefficient field
+        totalVariables2 = analysisGDB + "\\Day2_Data"
+        # add day0 coEx field
+        arcpy.AddField_management(totalVariables2, "CoEf_D2All", "DOUBLE", "", "", "", "CoEf_D2All")
+        print("field added")
+        # run update cursor to establish values:
+        with arcpy.da.UpdateCursor(totalVariables2, ["asnow_sfc_", "wind_mean", "gust_max", "snowc_sfc_", "CoEf_D2All"]) as cursor:
+            for row in cursor:
+                row[4] = (4.72027 * ((float(row[0]))/3.17009)) + (6.33583 * ((float(row[1]))/9.256787)) + (8.79018 * ((float(row[2]))/20.646002)) + (9.33122 * ((float(row[3]))/2200))
+                cursor.updateRow(row)
+
+        # copy field to variable coefficient field
+        totalVariables3 = analysisGDB + "\\Day3_Data"
+        # add day0 coEx field
+        arcpy.AddField_management(totalVariables3, "CoEf_D3All", "DOUBLE", "", "", "", "CoEf_D3All")
+        print("field added")
+        # run update cursor to establish values:
+        with arcpy.da.UpdateCursor(totalVariables3, ["asnow_sfc_", "wind_mean", "gust_max", "snowc_sfc_", "CoEf_D3All"]) as cursor:
+            for row in cursor:
+                row[4] = (3.14819 * ((float(row[0]))/3.17009)) + (1.90112 * ((float(row[1]))/12.219002)) + (2.80461 * ((float(row[2]))/21.967773)) + (10.91166 * ((float(row[3]))/2300))
+                cursor.updateRow(row)
+
+        # copy field to variable coefficient field
+        totalVariables4 = analysisGDB + "\\Day4_Data"
+        # add day0 coEx field
+        arcpy.AddField_management(totalVariables4, "CoEf_D4All", "DOUBLE", "", "", "", "CoEf_D4All")
+        print("field added")
+        # run update cursor to establish values:
+        with arcpy.da.UpdateCursor(totalVariables4, ["asnow_sfc_", "wind_mean", "gust_max", "snowc_sfc_", "CoEf_D4All"]) as cursor:
+            for row in cursor:
+                row[4] = (4.09773 * ((float(row[0]))/3.005762)) + (1.09074 * ((float(row[1]))/9.464876)) + (0.89591 * ((float(row[2]))/21.40287)) + (6.84045 * ((float(row[3]))/2300))
+                cursor.updateRow(row)
+
+        # copy field to variable coefficient field
+        totalVariables5 = analysisGDB + "\\Day5_Data"
+        # add day0 coEx field
+        arcpy.AddField_management(totalVariables5, "CoEf_D5All", "DOUBLE", "", "", "", "CoEf_D5All")
+        print("field added")
+        # run update cursor to establish values:
+        with arcpy.da.UpdateCursor(totalVariables5, ["asnow_sfc_", "wind_mean", "gust_max", "snowc_sfc_", "CoEf_D5All"]) as cursor:
+            for row in cursor:
+                row[4] = (0.44490 * (float((row[0]))/1.98699)) + (0.05187 * ((float(row[1]))/9.475428)) + (1.91663 * ((float(row[2]))/22.425901)) + (11.86909 * ((float(row[3]))/2300))
+                cursor.updateRow(row)
+
+        # copy field to variable coefficient field
+        totalVariables6 = analysisGDB + "\\Day6_Data"
+        # add day0 coEx field
+        arcpy.AddField_management(totalVariables6, "CoEf_D6All", "DOUBLE", "", "", "", "CoEf_D6All")
+        print("field added")
+        # run update cursor to establish values:
+        with arcpy.da.UpdateCursor(totalVariables6, ["asnow_sfc_", "wind_mean", "gust_max", "snowc_sfc_", "CoEf_D6All"]) as cursor:
+            for row in cursor:
+                row[4] = (2.94783 * ((float(row[0]))/3.423516)) + (0.13093 * ((float(row[1]))/11.603606)) + (0.34385 * ((float(row[2]))/26.604528)) + (13.28831 * ((float(row[3]))/2400))
+                cursor.updateRow(row)
+
+        # copy field to variable coefficient field
+        totalVariables7 = analysisGDB + "\\Day7_Data"
+        # add day0 coEx field
+        arcpy.AddField_management(totalVariables7, "CoEf_D7All", "DOUBLE", "", "", "", "CoEf_D7All")
+        print("field added")
+        # run update cursor to establish values:
+        with arcpy.da.UpdateCursor(totalVariables7, ["asnow_sfc_", "wind_mean", "gust_max", "snowc_sfc_", "CoEf_D7All"]) as cursor:
+            for row in cursor:
+                row[4] = (5.28710 * ((float(row[0]))/2.428652)) + (0.00192 * ((float(row[1]))/11.054111)) + (1.23496 * ((float(row[2]))/25.700121)) + (3.21969 * ((float(row[3]))/2200))
+                cursor.updateRow(row)
+
+        print("done and check")
+    except Exception as ex:
+        print(ex)
+
+    try:
+        # create feature class
+        arcpy.CopyFeatures_management(analysisGDB + "\\Day0_Data", analysisGDB + "\\CoexFile_All")
+        arcpy.JoinField_management(analysisGDB + "\\CoexFile_All", "Unique_Num", analysisGDB + "\\Day1_Data", "Unique_Num", "CoEf_D1All")
+        arcpy.JoinField_management(analysisGDB + "\\CoexFile_All", "Unique_Num", analysisGDB + "\\Day2_Data", "Unique_Num",
+                                   "CoEf_D2All")
+        arcpy.JoinField_management(analysisGDB + "\\CoexFile_All", "Unique_Num", analysisGDB + "\\Day3_Data", "Unique_Num",
+                                   "CoEf_D3All")
+        arcpy.JoinField_management(analysisGDB + "\\CoexFile_All", "Unique_Num", analysisGDB + "\\Day4_Data", "Unique_Num",
+                                   "CoEf_D4All")
+        arcpy.JoinField_management(analysisGDB + "\\CoexFile_All", "Unique_Num", analysisGDB + "\\Day5_Data", "Unique_Num",
+                                   "CoEf_D5All")
+        arcpy.JoinField_management(analysisGDB + "\\CoexFile_All", "Unique_Num", analysisGDB + "\\Day6_Data", "Unique_Num",
+                                   "CoEf_D6All")
+        arcpy.JoinField_management(analysisGDB + "\\CoexFile_All", "Unique_Num", analysisGDB + "\\Day7_Data", "Unique_Num",
+                                   "CoEf_D7All")
+    except Exception as ex:
+        print(ex)
+
+    try:
+        # find max value of each
+        arcpy.Statistics_analysis(analysisGDB + "\\CoexFile_All", analysisGDB + "\\MaxStatsCoEf_All", [["CoEf_D0All", "MAX"], ["CoEf_D1All", "MAX"], ["CoEf_D2All", "MAX"],
+                                                                                               ["CoEf_D3All", "MAX"], ["CoEf_D4All", "MAX"], ["CoEf_D5All", "MAX"], ["CoEf_D6All", "MAX"],
+                                                                                               ["CoEf_D7All", "MAX"]])
+        # find mean value of each
+        arcpy.Statistics_analysis(analysisGDB + "\\CoexFile_All", analysisGDB + "\\MeanStatsCoEf_All",
+                                  [["CoEf_D0All", "MEAN"], ["CoEf_D1All", "MEAN"], ["CoEf_D2All", "MEAN"],
+                                   ["CoEf_D3All", "MEAN"], ["CoEf_D4All", "MEAN"], ["CoEf_D5All", "MEAN"],
+                                   ["CoEf_D6All", "MEAN"],
+                                   ["CoEf_D7All", "MEAN"]])
+        # find min value of each
+        arcpy.Statistics_analysis(analysisGDB + "\\CoexFile_All", analysisGDB + "\\MinStatsCoEf_All",
+                                  [["CoEf_D0All", "MIN"], ["CoEf_D1All", "MIN"], ["CoEf_D2All", "MIN"],
+                                   ["CoEf_D3All", "MIN"], ["CoEf_D4All", "MIN"], ["CoEf_D5All", "MIN"],
+                                   ["CoEf_D6All", "MIN"],
+                                   ["CoEf_D7All", "MIN"]])
+        # find median value of each
+        arcpy.Statistics_analysis(analysisGDB + "\\CoexFile_All", analysisGDB + "\\MedianStatsCoEf_All",
+                                  [["CoEf_D0All", "MEDIAN"], ["CoEf_D1All", "MEDIAN"], ["CoEf_D2All", "MEDIAN"],
+                                   ["CoEf_D3All", "MEDIAN"], ["CoEf_D4All", "MEDIAN"], ["CoEf_D5All", "MEDIAN"],
+                                   ["CoEf_D6All", "MEDIAN"],
+                                   ["CoEf_D7All", "MEDIAN"]])
+    except Exception as ex:
+        print(ex)
+except Exception as ex:
+    print(ex)
+
+print("export tables")
+try:
+    arcpy.env.workspace = analysisGDB
+    tables = arcpy.ListTables()
+    for table in tables:
+        arcpy.ExportTable_conversion(table,
+                                     f"C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\ManuscriptDrafts\\DataTables\\{table}_HWNatAvyXport.csv",
+                                     "", "NOT_USE_ALIAS")
+except Exception as ex:
+    print(ex)
+
+try:
+    dir_name = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\ManuscriptDrafts\\DataTables"
+    test = os.listdir(dir_name)
+    for item in test:
+        if item.endswith("xml"):
+            os.remove(os.path.join(dir_name, item))
+except Exception as ex:
+    print(ex)
+
+print("creating data files")
+try:
+    # for mean wind
+    try:
+        Day0file = analysisGDB + "\\Day0_Data"
+        arcpy.CopyFeatures_management(Day0file, analysisGDB + "\\Wind_MeanData")
+        print("feature created")
+        arcpy.DeleteField_management(analysisGDB + "\\Wind_MeanData",
+                                     ["gust_mean", "sfcr_mean", "snod_mean", "tmp_h_mean",
+                                      "tmp_s_mean", "StdTime", "StdTime_Ma", "Dimensions",
+                                      "gust_max", "sfcr_max", "snod_max", "tmp_h_max",
+                                      "tmp_s_max", "wind_max", "gust_min", "sfcr_min",
+                                      "snod_min", "tmp_h_min", "tmp_s_min", "wind_min",
+                                      "asnow_sfc_", "snowc_sfc_", "ugrd_htgl_", "vgrd_htgl_", "wind_dir"])
+        print("fields deleted")
+        arcpy.AlterField_management(analysisGDB + "\\Wind_MeanData", "wind_mean", "wind_mn_D0", "wind_mn_D0")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Wind_MeanData", "ID_NUM", analysisGDB + "\\Day1_Data", "ID_Num",
+                                   "wind_mean")
+        print("day 1 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Wind_MeanData", "wind_mean", "wind_mn_D1", "wind_mn_D1")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Wind_MeanData", "ID_NUM", analysisGDB + "\\Day2_Data", "ID_Num",
+                                   "wind_mean")
+        print("day 2 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Wind_MeanData", "wind_mean", "wind_mn_D2", "wind_mn_D2")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Wind_MeanData", "ID_NUM", analysisGDB + "\\Day3_Data", "ID_Num",
+                                   "wind_mean")
+        print("day 3 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Wind_MeanData", "wind_mean", "wind_mn_D3", "wind_mn_D3")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Wind_MeanData", "ID_NUM", analysisGDB + "\\Day4_Data", "ID_Num",
+                                   "wind_mean")
+        print("day 4 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Wind_MeanData", "wind_mean", "wind_mn_D4", "wind_mn_D4")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Wind_MeanData", "ID_NUM", analysisGDB + "\\Day5_Data", "ID_Num",
+                                   "wind_mean")
+        print("day 5 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Wind_MeanData", "wind_mean", "wind_mn_D5", "wind_mn_D5")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Wind_MeanData", "ID_NUM", analysisGDB + "\\Day6_Data", "ID_Num",
+                                   "wind_mean")
+        print("day 6 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Wind_MeanData", "wind_mean", "wind_mn_D6", "wind_mn_D6")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Wind_MeanData", "ID_NUM", analysisGDB + "\\Day7_Data", "ID_Num",
+                                   "wind_mean")
+        print("day 7 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Wind_MeanData", "wind_mean", "wind_mn_D7", "wind_mn_D7")
+
+        fields = arcpy.ListFields(analysisGDB + "\\Wind_MeanData")
+        for field in fields:
+            print(field.name)
+        print("field altered")
+    except Exception as ex:
+        print(ex)
+
+    # for a snow
+    try:
+        # for accumulated snow
+        Day0file = analysisGDB + "\\Day0_Data"
+        arcpy.CopyFeatures_management(Day0file, analysisGDB + "\\Snow_Data")
+        print("feature created")
+        arcpy.DeleteField_management(analysisGDB + "\\Snow_Data", ["gust_mean", "sfcr_mean", "snod_mean", "tmp_h_mean",
+                                                                   "tmp_s_mean", "StdTime", "StdTime_Ma", "Dimensions",
+                                                                   "gust_max", "sfcr_max", "snod_max", "tmp_h_max",
+                                                                   "tmp_s_max", "wind_max", "gust_min", "sfcr_min",
+                                                                   "snod_min", "tmp_h_min", "tmp_s_min", "wind_min",
+                                                                   "wind_mean", "snowc_sfc_", "ugrd_htgl_",
+                                                                   "vgrd_htgl_", "wind_dir"])
+        print("fields deleted")
+        arcpy.AlterField_management(analysisGDB + "\\Snow_Data", "asnow_sfc_", "asnow_D0", "asnow_D0")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Snow_Data", "ID_NUM", analysisGDB + "\\Day1_Data", "ID_Num",
+                                   "asnow_sfc_")
+        print("day 1 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Snow_Data", "asnow_sfc_", "asnow_D1", "asnow_D1")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Snow_Data", "ID_NUM", analysisGDB + "\\Day2_Data", "ID_Num",
+                                   "asnow_sfc_")
+        print("day 2 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Snow_Data", "asnow_sfc_", "asnow_D2", "asnow_D2")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Snow_Data", "ID_NUM", analysisGDB + "\\Day3_Data", "ID_Num",
+                                   "asnow_sfc_")
+        print("day 3 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Snow_Data", "asnow_sfc_", "asnow_D3", "asnow_D3")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Snow_Data", "ID_NUM", analysisGDB + "\\Day4_Data", "ID_Num",
+                                   "asnow_sfc_")
+        print("day 4 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Snow_Data", "asnow_sfc_", "asnow_D4", "asnow_D4")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Snow_Data", "ID_NUM", analysisGDB + "\\Day5_Data", "ID_Num",
+                                   "asnow_sfc_")
+        print("day 5 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Snow_Data", "asnow_sfc_", "asnow_D5", "asnow_D5")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Snow_Data", "ID_NUM", analysisGDB + "\\Day6_Data", "ID_Num",
+                                   "asnow_sfc_")
+        print("day 6 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Snow_Data", "asnow_sfc_", "asnow_D6", "asnow_D6")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Snow_Data", "ID_NUM", analysisGDB + "\\Day7_Data", "ID_Num",
+                                   "asnow_sfc_")
+        print("day 6 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Snow_Data", "asnow_sfc_", "asnow_D7", "asnow_D7")
+        print("field altered")
+    except Exception as ex:
+        print(ex)
+
+    # for gust
+    try:
+        # for accumulated snow
+        Day0file = analysisGDB + "\\Day0_Data"
+        arcpy.CopyFeatures_management(Day0file, analysisGDB + "\\Max_Gust_Data")
+        print("feature created")
+        arcpy.DeleteField_management(analysisGDB + "\\Max_Gust_Data",
+                                     ["gust_mean", "sfcr_mean", "snod_mean", "tmp_h_mean",
+                                      "tmp_s_mean", "StdTime", "StdTime_Ma", "Dimensions",
+                                      "asnow_sfc_", "sfcr_max", "snod_max", "tmp_h_max",
+                                      "tmp_s_max", "wind_max", "gust_min", "sfcr_min",
+                                      "snod_min", "tmp_h_min", "tmp_s_min", "wind_min",
+                                      "wind_mean", "snowc_sfc_", "ugrd_htgl_", "vgrd_htgl_", "wind_dir"])
+        print("fields deleted")
+        arcpy.AlterField_management(analysisGDB + "\\Max_Gust_Data", "gust_max", "gust_mx_D0", "gust_mx_D0")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Max_Gust_Data", "ID_NUM", analysisGDB + "\\Day1_Data", "ID_Num",
+                                   "gust_max")
+        print("day 1 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Max_Gust_Data", "gust_max", "gust_mx_D1", "gust_mx_D1")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Max_Gust_Data", "ID_NUM", analysisGDB + "\\Day2_Data", "ID_Num",
+                                   "gust_max")
+        print("day 2 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Max_Gust_Data", "gust_max", "gust_mx_D2", "gust_mx_D2")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Max_Gust_Data", "ID_NUM", analysisGDB + "\\Day3_Data", "ID_Num",
+                                   "gust_max")
+        print("day 3 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Max_Gust_Data", "gust_max", "gust_mx_D3", "gust_mx_D3")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Max_Gust_Data", "ID_NUM", analysisGDB + "\\Day4_Data", "ID_Num",
+                                   "gust_max")
+        print("day 4 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Max_Gust_Data", "gust_max", "gust_mx_D4", "gust_mx_D4")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Max_Gust_Data", "ID_NUM", analysisGDB + "\\Day5_Data", "ID_Num",
+                                   "gust_max")
+        print("day 5 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Max_Gust_Data", "gust_max", "gust_mx_D5", "gust_mx_D5")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Max_Gust_Data", "ID_NUM", analysisGDB + "\\Day6_Data", "ID_Num",
+                                   "gust_max")
+        print("day 6 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Max_Gust_Data", "gust_max", "gust_mx_D6", "gust_mx_D6")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\Max_Gust_Data", "ID_NUM", analysisGDB + "\\Day7_Data", "ID_Num",
+                                   "gust_max")
+        print("day 6 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\Max_Gust_Data", "gust_max", "gust_mx_D7", "gust_mx_D7")
+        print("field altered")
+    except Exception as ex:
+        print(ex)
+
+    # for snow cover
+    # for gust
+    try:
+        # for accumulated snow
+        Day0file = analysisGDB + "\\Day0_Data"
+        arcpy.CopyFeatures_management(Day0file, analysisGDB + "\\SnowCover_Data")
+        print("feature created")
+        arcpy.DeleteField_management(analysisGDB + "\\SnowCover_Data",
+                                     ["gust_mean", "sfcr_mean", "snod_mean", "tmp_h_mean",
+                                      "tmp_s_mean", "StdTime", "StdTime_Ma", "Dimensions",
+                                      "asnow_sfc_", "sfcr_max", "snod_max", "tmp_h_max",
+                                      "tmp_s_max", "wind_max", "gust_min", "sfcr_min",
+                                      "snod_min", "tmp_h_min", "tmp_s_min", "wind_min",
+                                      "wind_mean", "gust_max", "ugrd_htgl_", "vgrd_htgl_", "wind_dir"])
+        print("fields deleted")
+        arcpy.AlterField_management(analysisGDB + "\\SnowCover_Data", "snowc_sfc_", "snowCov_D0", "snowCov_D0")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\SnowCover_Data", "ID_NUM", analysisGDB + "\\Day1_Data", "ID_Num",
+                                   "snowc_sfc_")
+        print("day 1 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\SnowCover_Data", "snowc_sfc_", "snowCov_D1", "snowCov_D1")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\SnowCover_Data", "ID_NUM", analysisGDB + "\\Day2_Data", "ID_Num",
+                                   "snowc_sfc_")
+        print("day 2 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\SnowCover_Data", "snowc_sfc_", "snowCov_D2", "snowCov_D2")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\SnowCover_Data", "ID_NUM", analysisGDB + "\\Day3_Data", "ID_Num",
+                                   "snowc_sfc_")
+        print("day 3 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\SnowCover_Data", "snowc_sfc_", "snowCov_D3", "snowCov_D3")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\SnowCover_Data", "ID_NUM", analysisGDB + "\\Day4_Data", "ID_Num",
+                                   "snowc_sfc_")
+        print("day 4 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\SnowCover_Data", "snowc_sfc_", "snowCov_D4", "snowCov_D4")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\SnowCover_Data", "ID_NUM", analysisGDB + "\\Day5_Data", "ID_Num",
+                                   "snowc_sfc_")
+        print("day 5 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\SnowCover_Data", "snowc_sfc_", "snowCov_D5", "snowCov_D5")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\SnowCover_Data", "ID_NUM", analysisGDB + "\\Day6_Data", "ID_Num",
+                                   "snowc_sfc_")
+        print("day 6 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\SnowCover_Data", "snowc_sfc_", "snowCov_D6", "snowCov_D6")
+        print("field altered")
+        arcpy.JoinField_management(analysisGDB + "\\SnowCover_Data", "ID_NUM", analysisGDB + "\\Day7_Data", "ID_Num",
+                                   "snowc_sfc_")
+        print("day 7 field joined")
+        arcpy.AlterField_management(analysisGDB + "\\SnowCover_Data", "snowc_sfc_", "snowCov_D7", "snowCov_D7")
+        print("field altered")
+    except Exception as ex:
+        print(ex)
+
+    try:
+        arcpy.CopyFeatures_management(analysisGDB + "\\Snow_Data", analysisGDB + "\\AllStatSigVariables")
+        print("field copied")
+
+        arcpy.JoinField_management(analysisGDB + "\\AllStatSigVariables", "Unique_Num", analysisGDB + "\\Max_Gust_Data",
+                                   "Unique_Num", ["gust_mx_D0", "gust_mx_D1", "gust_mx_D2", "gust_mx_D3", "gust_mx_D4",
+                                                  "gust_mx_D5", "gust_mx_D6", "gust_mx_D7"])
+        print("gust fields added")
+        arcpy.JoinField_management(analysisGDB + "\\AllStatSigVariables", "Unique_Num", analysisGDB + "\\Wind_MeanData",
+                                   "Unique_Num", ["wind_mn_D0", "wind_mn_D1", "wind_mn_D2", "wind_mn_D3", "wind_mn_D4",
+                                                  "wind_mn_D5", "wind_mn_D6", "wind_mn_D7"])
+        print("wind fields added")
+        arcpy.JoinField_management(analysisGDB + "\\AllStatSigVariables", "Unique_Num", analysisGDB + "\\SnowCover_Data",
+                                   "Unique_Num", ["snowCov_D0", "snowCov_D1", "snowCov_D2", "snowCov_D3", "snowCov_D4",
+                                                  "snowCov_D5", "snowCov_D6", "snowCov_D7"])
+        print("wind fields added")
+    except Exception as ex:
+        print(ex)
+except Exception as ex:
+    print(ex)
+
+try:
+    allVariables = analysisGDB + "\\AllStatSigVariables"
+    arcpy.AddField_management(allVariables, "SnowMed", "SHORT", "", "", "",
+                              "SnowMed")
+    print("field added")
+    with arcpy.da.UpdateCursor(allVariables, ["asnow_D0", "asnow_D1", "asnow_D2", "SnowMed"]) as cursor:
+        for row in cursor:
+            if row[0] >= .931689:
+                row[3] = 1
+            elif row[1] >= 0.856258:
+                row[3] = 2
+            elif row[2] >= 0.02402:
+                row[3] = 3
+            else:
+                row[3] = 0
+            cursor.updateRow(row)
+    print("snow median selection made")
+
+    snowD0 = arcpy.SelectLayerByAttribute_management(allVariables, "NEW_SELECTION", '"SnowMed" = 1')
+    arcpy.CopyFeatures_management(snowD0, analysisGDB + "\\PrimeSnowD0")
+
+    snowD1 = arcpy.SelectLayerByAttribute_management(allVariables, "NEW_SELECTION", '"SnowMed" = 2')
+    arcpy.CopyFeatures_management(snowD1, analysisGDB + "\\PrimeSnowD1")
+
+    snowD2 = arcpy.SelectLayerByAttribute_management(allVariables, "NEW_SELECTION", '"SnowMed" = 3')
+    arcpy.CopyFeatures_management(snowD2, analysisGDB + "\\PrimeSnowD2")
+    print("files created")
+except Exception as ex:
+    print(ex)
