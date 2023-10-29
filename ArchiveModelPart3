@@ -1,4 +1,20 @@
+# By Emma Tyrrell
+#
+# Completed  for Master's Thesis in Spatial Data Science at Penn State University.
 
+# Description: This script is part 3 of a 5 part process that analyzes avalanche data with HRRR model weather data for the purpose
+# of creating a forecast model. This script analyzes a combined shapefile of both natural highway avalanche days and
+# non-avalanche days from parts 1 and 2 of this script package. This new mixed shapefile has an additional binary field
+# indicating if a field is an avalanche record or a non-avalanche record. After this shapefile is divided into individual
+# shapefiles per record, it is passed through the sampling filter that determines the HRRR model variable value for each
+# point. This file is then run through a binary logistic regression model to determine the statistical signifcance of 
+# each variable.
+#
+# Data Sources: Colorado Avalanche Information Center, National Oceanic
+# and Atmospheric Association - High-Resolution Rapid Refresh Model,
+# Esri ArcGIS Pro.
+#
+######################################################################################################################
 # import modules
 import arcpy
 import os
@@ -7,21 +23,67 @@ from datetime import timedelta
 from datetime import datetime as dt
 print("modules imported")
 
+#######################################################################################################################
+# This section is responsible for setting all the new parameters. This is the part 3 of 5 for this script where the 
+# shapefiles for part 1 and 2 are merged together, meaning there is not a need to additional date fields since they 
+# were included in the merge from parts 1 and 2. A consolidated .crf HRRR model file is also required for this model 
+# that must range from one-week prior to the date of the first event and goes to two days past the last event.
+#######################################################################################################################
+
 # import parameters
 arcpy.env.workspace = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData"
-avyGDB = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\AvalancheFiles.gdb"
-sampledGDB = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\MixedSampled_GDB.gdb"
-HRRRData = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\HRRRData"
-AvyDataWorkspace = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\AvyData\\SharedData"
-AnalysisData = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\AvyData\\SharedAnalysisData"
-analysisGDB = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\Mixed_AnalysisData.gdb"
-GLRM_GDB = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\GLRM_Database.gdb"
+avyGDB = arcpy.env.workspace + "\\AvalancheFiles.gdb"
+sampledGDB = arcpy.env.workspace + "\\MixedSampled_GDB.gdb"
+HRRRData = arcpy.env.workspace + "\\HRRRData"
+AvyDataWorkspace = arcpy.env.workspace + "\\AvyData\\SharedData"
+AnalysisData = arcpy.env.workspace + "\\AvyData\\SharedAnalysisData"
+analysisGDB = arcpy.env.workspace + "\\Mixed_AnalysisData.gdb"
+GLRM_GDB = arcpy.env.workspace + "\\GLRM_Database.gdb"
+avalancheData = arcpy.env.workspace + "\\AvalancheFiles.gdb\\NonAvyDaysSample_Merge"
+
+# update HRRR model data files for 2018 to 2022
+meanHRRRFile18 = HRRRData + "\\2018\\2018meanHRRRVariables.crf"
+minHRRRFile18 = HRRRData + "\\2018\\2018minHRRRVariables.crf"
+maxHRRRFile18 = HRRRData + "\\2018\\2018maxHRRRVariables.crf"
+sumHRRRFile18 = HRRRData + "\\2018\\2018sumHRRRVariables.crf"
+windHRRRFile18_Z = HRRRData + "\\2018\\2018windHRRRVariables_z10.crf"
+meanHRRRFile19 = HRRRData + "\\2019\\2019meanHRRRVariables.crf"
+minHRRRFile19 = HRRRData + "\\2019\\2019minHRRRVariables.crf"
+maxHRRRFile19 = HRRRData + "\\2019\\2019maxHRRRVariables.crf"
+sumHRRRFile19 = HRRRData + "\\2019\\2019sumHRRRVariables.crf"
+windHRRRFile19_Z = HRRRData + "\\2019\\2019windHRRRVariables_z10.crf"
+meanHRRRFile20 = HRRRData + "\\2020\\2020meanHRRRVariables.crf"
+minHRRRFile20 = HRRRData + "\\2020\\2020minHRRRVariables.crf"
+maxHRRRFile20 = HRRRData + "\\2020\\2020maxHRRRVariables.crf"
+sumHRRRFile20 = HRRRData + "\\2020\\2020sumHRRRVariables.crf"
+windHRRRFile20_Z = HRRRData + "\\2020\\2020windHRRRVariables_z10.crf"
+meanHRRRFile21 = HRRRData + "\\2021\\2021meanHRRRVariables.crf"
+minHRRRFile21 = HRRRData + "\\2021\\2021minHRRRVariables.crf"
+maxHRRRFile21 = HRRRData + "\\2021\\2021maxHRRRVariables.crf"
+sumHRRRFile21 = HRRRData + "\\2021\\2021sumHRRRVariables.crf"
+windHRRRFile21 = HRRRData + "\\2021\\2021windHRRRVariables.crf"
+windHRRRFile21_Z = HRRRData + "\\2021\\2021windHRRRVariables_z10.crf"
+meanHRRRFile22 = HRRRData + "\\2022\\2022meanHRRRVariables.crf"
+minHRRRFile22 = HRRRData + "\\2022\\2022minHRRRVariables.crf"
+maxHRRRFile22 = HRRRData + "\\2022\\2022maxHRRRVariables.crf"
+sumHRRRFile22 = HRRRData + "\\2022\\2022sumHRRRVariables.crf"
+windHRRRFile22_Z = HRRRData + "\\2022\\2022windHRRRVariables_z10.crf"
+
+# The following parameters state the UTC time conversion and the project's set parameters
 arcpy.env.overwriteOutput = True
 arcpy.env.qualifiedFieldNames = False
-avalancheData = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\AvalancheFiles.gdb\\NonAvyDaysSample_Merge"
 UTCtimeConversion = timedelta(hours=-7)
 PCSsr = arcpy.SpatialReference(6431)
 print("parameters established")
+
+#######################################################################################################################
+# End of set parameters
+#######################################################################################################################
+
+#######################################################################################################################
+# This section of the code creates individual shapefiles for avalanches of all event dates for the study timeline to
+# prevent issues when sampling data. 
+#######################################################################################################################
 
 print("creating shapefiles ...")
 # make shapefiles for avalanches
@@ -157,6 +219,10 @@ try:
         print(ex)
 except Exception as ex:
     print(ex)
+#######################################################################################################################
+# The next section samples all the data based on HRRR model data. Please see PrepScriptAvalancheAnalysis.py for info
+# on that process. There are 5 HRRR files that loop over all the data files for the corresponding year
+######################################################################################################################
 
 print("sampling 2018 data ...")
 # 2018 days 0-7 sample
@@ -9026,6 +9092,12 @@ try:
 except Exception as ex:
     print(ex)
 
+#######################################################################################################################
+# This next section compiles all the individual daily files together, renames them and adds them to an analysis
+# forecast geodatabased along with summary statistics on all the avalanches on all the variables sampled by the
+# HRRR model sampling.
+#######################################################################################################################
+
 print("aggregating data and gathering statistics ...")
 # get summary statistics:
 try:
@@ -11239,6 +11311,13 @@ try:
         print(ex)
 except Exception as ex:
     print(ex)
+
+#######################################################################################################################
+# This next section conducts the Binary Logistic Regression Model on each file from Day0 to Day7 based on the binary
+# field in the shapefile where 1 = avalanche date and 2 = non-avalanche day. The output of this process is a p-value 
+# and a Joint Wald Statistic that is used to formulate the Forecast Value Index used in part 4 and 5 of the analysis
+# model framework. 
+#######################################################################################################################
 
 print("conducting GLR Model ")
 try:
