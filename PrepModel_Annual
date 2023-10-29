@@ -1,1 +1,975 @@
-## prepped all data files conducted once a year
+# sample script that goes from Avy point layers to final sample analysis
+
+# import directories
+import arcpy
+import os
+from arcpy.sa import *
+from datetime import datetime as dt
+from datetime import timedelta
+print("imported modules")
+
+print("establishing parameters ... ")
+# set master workspace and overwrite conditions
+arcpy.env.workspace = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData"
+gdbName = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\StaticDataGDB.gdb"
+avyGDB = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\AvalancheFiles.gdb"
+sampledGDB = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\Sampled_Data.gdb"
+analysisGDB = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\Analysis_Data.gdb"
+HRRRData = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\HRRRData"
+AnalysisData = arcpy.env.workspace + "\\AnalysisData"
+projectBoundary = avyGDB + "\\ProjectBoundary"
+outputData = arcpy.env.workspace + "\\OutputProcessing"
+AvyDataWorkspace = arcpy.env.workspace + "\\AvyData"
+mosaicBit = 1
+mosaicPixelType = "32_BIT_FLOAT"
+GCSsr = arcpy.SpatialReference(4326)
+PCSsr = arcpy.SpatialReference(6431)
+arcpy.env.overwriteOutput = True
+arcpy.env.qualifiedFieldNames = False
+avalancheData = avyGDB + "\\AvalanchePathIncidentPoints_Copy"
+UTCtimeConversion = timedelta(hours=-7)
+print("parameters established.")
+
+# slope and aspect on mosaic data set
+print("creating slope, aspect, and curvature fields ...")
+try:
+    # establish local parameters
+    demMosaic = gdbName + "\\demMosaic2"
+    demFiles = arcpy.env.workspace + "\\DEM"
+    terrainWorkspace = arcpy.env.workspace + "\\Terrain"
+    try:
+        # set slope parameters
+        arcpy.CheckOutExtension("Spatial")
+        outMeasurement = "DEGREE"
+        slope = avyGDB + "\\slope"
+        slope_clipped = avyGDB + "\\Slope_Clipped"
+        slopeReclass = terrainWorkspace + "\\Slope_Reclassified.tif"
+
+        # create slope
+        outSlope = Slope(demMosaic, outMeasurement)
+        outSlope.save(slope)
+        print("- slope created")
+        arcpy.Clip_management(slope, projectBoundary, slope_clipped)
+        print("- slope clipped")
+
+        # reclass slope and make them polygons
+        reclass_Slope = Reclassify(slope_clipped, "Value", RemapRange([[0, 25, "NODATA"], [25, 30, 1], [30, 35, 2],
+                                                                       [35, 40, 3], [40, 45, 4], [45, 50, 5],
+                                                                       [50, 55, 6], [55, 60, 7], [60, 90, "NODATA"]]))
+        reclass_Slope.save(slopeReclass)
+        print("- rasters reclassified")
+    except Exception as ex:
+        print(ex)
+    try:
+        # set aspect parameters
+        arcpy.CheckOutExtension("Spatial")
+        aspect = avyGDB + "\\aspect"
+        aspect_clipped = avyGDB + "\\Aspect_Clipped"
+        aspectReclass = terrainWorkspace + "\\Aspect_Reclassified.tif"
+
+        # create aspect
+        outAspect = Aspect(demMosaic)
+        outAspect.save(aspect)
+        print("- aspect created")
+        arcpy.Clip_management(aspect, projectBoundary, aspect_clipped)
+        print("- aspect clipped")
+
+        # reclass aspect and make polygons
+        reclass_aspect = Reclassify(aspect_clipped, "Value",
+                                    RemapRange([[0, 22.5, 1], [22.5, 67.5, 2], [67.5, 112.5, 3],
+                                                [112.5, 157.5, 4], [157.5, 202.5, 5],
+                                                [202.5, 247.5, 6], [247.5, 292.5, 7],
+                                                [292.5, 337.5, 8], [337.5, 360, 9]]))
+        reclass_aspect.save(aspectReclass)
+        print("- aspect reclassified")
+
+        # make aspect polygons
+        aspectPolygons = avyGDB + "\\AvyAspect_Polygons"
+        arcpy.RasterToPolygon_conversion(aspectReclass, aspectPolygons)
+        print("- aspect polygons created")
+        # add field to aspect and correlate names to numbers
+        arcpy.AddField_management(aspectPolygons, "Compass", "TEXT", "", "", 20, "Compass")
+        print("- new field created")
+
+        # update cursor
+        fc = aspectPolygons
+        fields = ["gridcode", "Compass"]
+        with arcpy.da.UpdateCursor(fc, fields) as cursor:
+            for row in cursor:
+                if row[0] == 1:
+                    row[1] = "North"
+                if row[0] == 2:
+                    row[1] = "Northeast"
+                if row[0] == 3:
+                    row[1] = "East"
+                if row[0] == 4:
+                    row[1] = "Southeast"
+                if row[0] == 5:
+                    row[1] = "South"
+                if row[0] == 6:
+                    row[1] = "Southwest"
+                if row[0] == 7:
+                    row[1] = "West"
+                if row[0] == 8:
+                    row[1] = "Northwest"
+                if row[0] == 9:
+                    row[1] = "North"
+                if row[0] == -1:
+                    row[1] = "Flat"
+                cursor.updateRow(row)
+        print("- field updated")
+    except Exception as ex:
+        print(ex)
+    try:
+        # set curvature parameters
+        curvature = avyGDB + "\\curvature"
+        profileCurvature = avyGDB + "\\ProfileCurvature"
+        planCurvature = avyGDB + "\\PlanCurvature"
+        curvature_clipped = avyGDB + "\\Curvature_Clipped"
+        profileCurvature_clipped = avyGDB + "\\ProfileCurvature_Clipped"
+        planCurvature_clipped = avyGDB + "\\PlanCurvature_Clipped"
+        profile_reclass = avyGDB + "\\profile_reclass"
+        plan_reclass = avyGDB + "\\planCurve_reclass"
+        profileCurve_polygons = avyGDB + "\\profileCurve_polygons"
+        planCurve_polygons = avyGDB + "\\planCurve_polygons"
+        posProfile_CurvePoly = avyGDB + "\\ProfileCurve_accelerate_poly"
+        negPlan_CurvePoly = avyGDB + "\\PlanarCurve_funnel_poly"
+        posProfile_CurvePoly_lyr = avyGDB + "\\ProfileCurve_accelerate_lyr"
+        negPlan_CurvePoly_lyr = avyGDB + "\\PlanarCurve_funnel_poly_lyr"
+
+        # create curvature
+        Curvature(demMosaic, "", profileCurvature, planCurvature)
+        print("- plan and profile curvature created")
+        outCurve = Curvature(demMosaic)
+        outCurve.save(curvature)
+        print("- curvature whole created")
+
+        # clip files
+        arcpy.Clip_management(curvature, projectBoundary, curvature_clipped)
+        arcpy.Clip_management(profileCurvature, projectBoundary, profileCurvature_clipped)
+        arcpy.Clip_management(planCurvature, projectBoundary, planCurvature_clipped)
+        print("- curvature files clipped")
+
+        # reclassify for couliors and accelerating
+        reclass_profileCurve = Reclassify(planCurvature_clipped, "Value", RemapRange([[-4, -.00001, 1], [0, 0, 2],
+                                          [0.00001, 4, 3]]))
+        reclass_profileCurve.save(profile_reclass)
+        print("- profile curvature reclassified")
+        reclass_planCurve = Reclassify(planCurvature_clipped, "Value", RemapRange([[-4, -.00001, 1], [0, 0, 2],
+                                       [0.00001, 4, 3]]))
+        reclass_planCurve.save(plan_reclass)
+        print("- profile curvature reclassified")
+
+        # convert profile curvatures to polygons
+        arcpy.RasterToPolygon_conversion(profile_reclass, profileCurve_polygons)
+        where_clause_pro = "gridcode = 3"
+        arcpy.MakeFeatureLayer_management(profileCurve_polygons, posProfile_CurvePoly_lyr, where_clause_pro)
+        arcpy.CopyFeatures_management(posProfile_CurvePoly_lyr, posProfile_CurvePoly)
+        print("- positive profile polygons creates -- avalanches will accelerate here")
+
+        # convert plan curvatures to polygons
+        arcpy.RasterToPolygon_conversion(plan_reclass, planCurve_polygons)
+        where_clause_plan = "gridcode = 1"
+        arcpy.MakeFeatureLayer_management(planCurve_polygons, negPlan_CurvePoly_lyr, where_clause_plan)
+        arcpy.CopyFeatures_management(negPlan_CurvePoly_lyr, negPlan_CurvePoly)
+        print("- negative planar polygons created -- avalanche funnels ")
+    except Exception as ex:
+        print(ex)
+    try:
+        slope = avyGDB + "\\slope"
+        curvature = avyGDB + "\\curvature"
+        aspect = avyGDB + "\\aspect"
+        profileCurvature = avyGDB + "\\ProfileCurvature"
+        planCurvature = avyGDB + "\\PlanCurvature"
+        profile_reclass = avyGDB + "\\profile_reclass"
+        plan_reclass = avyGDB + "\\planCurve_reclass"
+        profileCurve_polygons = avyGDB + "\\profileCurve_polygons"
+        slopeReclass = terrainWorkspace + "\\Slope_Reclassified.tif"
+        aspectReclass = terrainWorkspace + "\\Aspect_Reclassified.tif"
+        # delete files
+        arcpy.Delete_management([slope, aspect, curvature, profileCurvature, planCurvature, profile_reclass,
+                                 plan_reclass, profileCurve_polygons, aspectReclass, slopeReclass])
+        print("- deleted un-clipped data")
+    except Exception as ex:
+        print(ex)
+except Exception as ex:
+    print(ex)
+print("slope, aspect, curvature fields created. Sweet!")
+
+# create ndvi polygons
+print("creating vegetation variables that will be important for runout information ... ")
+try:
+    # trying 2018 NDVI
+    try:
+        # establish local parameters
+        ndviWorkspace = arcpy.env.workspace + "\\LandsatNDVI"
+        terrainWorkspace = arcpy.env.workspace + "\\Terrain"
+        landsat2018file = ndviWorkspace + "\\2018\\LC08_L1TP_035034_20180226_20200902_02_T1_MTL.txt"
+        ndvi2018file = outputData + "\\ndvi2018File.tif"
+        try:
+            # process ndvi file
+            ndvi_raster = arcpy.ia.NDVI(landsat2018file, 5, 4)
+            ndvi_raster.save(ndvi2018file)
+            print("- 2018 NDVI raster created and saved")
+
+            # clip ndvi file
+            ndvi2018_clip = avyGDB + "\\ndvi2018_clip"
+            arcpy.Clip_management(ndvi2018file, projectBoundary, ndvi2018_clip)
+            print("- 2018 ndvi file clipped")
+
+            # reclassify ndvi file
+            reclass_ndvi2018 = Reclassify(ndvi2018_clip, "Value", RemapRange([[-1, 0, "NODATA"], [0, 0.1, 1],
+                                                                              [0.1, 0.5, 2], [0.5, 1, 3]]))
+            reclass_ndvi2018.save(ndviWorkspace + "\\ndvi2018_clip_reclass.tif")
+            print("- 2018 ndvi reclassified")
+
+            # convert to polygons
+            reclass_ndvi2018 = ndviWorkspace + "\\ndvi2018_clip_reclass.tif"
+            ndvi2018_polygons = ndviWorkspace + "\\ndvi2018_polygons.shp"
+            arcpy.RasterToPolygon_conversion(reclass_ndvi2018, ndvi2018_polygons)
+            print("- shapefile for 2018 converted to polygons")
+
+            # add field
+            arcpy.AddField_management(ndvi2018_polygons, "VEG_DESC", "TEXT", "", "", 35, "VEG_DESC")
+            print("- veg field created")
+            arcpy.AddField_management(ndvi2018_polygons, "YEAR", "TEXT", "", "", 4, "YEAR")
+            print("- year field created")
+
+            # update cursor
+            fc = ndvi2018_polygons
+            fields = ["gridcode", "VEG_DESC"]
+            with arcpy.da.UpdateCursor(fc, fields) as cursor:
+                for row in cursor:
+                    if row[0] == 1:
+                        row[1] = "Bare Earth"
+                    if row[0] == 2:
+                        row[1] = "Sparse Vegetation"
+                    if row[0] == 3:
+                        row[1] = "Heavy Vegetation"
+                    cursor.updateRow(row)
+            print("- veg field updated")
+
+            # calculate year field
+            fc = ndvi2018_polygons
+            fields = ["gridcode", "YEAR"]
+            with arcpy.da.UpdateCursor(fc, fields) as cursor:
+                for row in cursor:
+                    if row[0] < 4:
+                        row[1] = "2018"
+                    cursor.updateRow(row)
+            print("- year field updated")
+        except Exception as ex:
+            print(ex)
+    except Exception as ex:
+        print(ex)
+    # trying 2019 NDVI
+    try:
+        # establish parameters for ndvi
+        ndviWorkspace = arcpy.env.workspace + "\\LandsatNDVI"
+        terrainWorkspace = arcpy.env.workspace + "\\Terrain"
+        landsat2019file = ndviWorkspace + "\\2019\\LC08_L1TP_035034_20190128_20200829_02_T1_MTL.txt"
+        ndvi2019file = outputData + "\\ndvi2019File.tif"
+        try:
+            # process ndvi file
+            ndvi_raster = arcpy.ia.NDVI(landsat2019file, 5, 4)
+            ndvi_raster.save(ndvi2019file)
+            print("- 2019 NDVI raster created and saved")
+
+            # clip ndvi file
+            ndvi2019_clip = avyGDB + "\\ndvi2019_clip"
+            arcpy.Clip_management(ndvi2019file, projectBoundary, ndvi2019_clip)
+            print("- 2019 ndvi file clipped")
+
+            # reclassify ndvi file
+            reclass_ndvi2019 = Reclassify(ndvi2019_clip, "Value", RemapRange([[-1, 0, "NODATA"], [0, 0.1, 1],
+                                                                              [0.1, 0.5, 2], [0.5, 1, 3]]))
+            reclass_ndvi2019.save(ndviWorkspace + "\\ndvi2019_clip_reclass.tif")
+            print("- ndvi 2019 reclassified")
+
+            # create polygons
+            reclass_ndvi2019 = ndviWorkspace + "\\ndvi2019_clip_reclass.tif"
+            ndvi2019_polygons = ndviWorkspace + "\\ndvi2019_polygons.shp"
+            arcpy.RasterToPolygon_conversion(reclass_ndvi2019, ndvi2019_polygons)
+            print("- shapefile for 2019 converted to polygons")
+
+            # add fields
+            arcpy.AddField_management(ndvi2019_polygons, "VEG_DESC", "TEXT", "", "", 35, "VEG_DESC")
+            print("- veg field created")
+            arcpy.AddField_management(ndvi2019_polygons, "YEAR", "TEXT", "", "", 4, "YEAR")
+            print("- year field created")
+
+            # update cursor
+            fc = ndvi2019_polygons
+            fields = ["gridcode", "VEG_DESC"]
+            with arcpy.da.UpdateCursor(fc, fields) as cursor:
+                for row in cursor:
+                    if row[0] == 1:
+                        row[1] = "Bare Earth"
+                    if row[0] == 2:
+                        row[1] = "Sparse Vegetation"
+                    if row[0] == 3:
+                        row[1] = "Heavy Vegetation"
+                    cursor.updateRow(row)
+            print("- veg field updated")
+
+            # calculate year field
+            fc = ndvi2019_polygons
+            fields = ["gridcode", "YEAR"]
+            with arcpy.da.UpdateCursor(fc, fields) as cursor:
+                for row in cursor:
+                    if row[0] < 4:
+                        row[1] = "2019"
+                    cursor.updateRow(row)
+            print("- year field updated")
+        except Exception as ex:
+            print(ex)
+    except Exception as ex:
+        print(ex)
+    # trying 2020 NDVI
+    try:
+        # establish parameters for ndvi
+        ndviWorkspace = arcpy.env.workspace + "\\LandsatNDVI"
+        terrainWorkspace = arcpy.env.workspace + "\\Terrain"
+        landsat2020file = ndviWorkspace + "\\2020\\LC08_L1TP_035034_20200115_20200823_02_T1_MTL.txt"
+        ndvi2020file = outputData + "\\ndvi2020File.tif"
+        try:
+            # process ndvi file
+            ndvi_raster = arcpy.ia.NDVI(landsat2020file, 5, 4)
+            ndvi_raster.save(ndvi2020file)
+            print("- 2020 NDVI raster created and saved")
+
+            # clip ndvi file
+            ndvi2020_clip = avyGDB + "\\ndvi2020_clip"
+            arcpy.Clip_management(ndvi2020file, projectBoundary, ndvi2020_clip)
+            print("- 2020 ndvi file clipped")
+
+            # reclassify ndvi file
+            reclass_ndvi2020 = Reclassify(ndvi2020_clip, "Value", RemapRange([[-1, 0, "NODATA"], [0, 0.1, 1],
+                                                                              [0.1, 0.5, 2], [0.5, 1, 3]]))
+            reclass_ndvi2020.save(ndviWorkspace + "\\ndvi2020_clip_reclass.tif")
+            print("- 2020 ndvi reclassified")
+
+            # establish polygons
+            reclass_ndvi2020 = ndviWorkspace + "\\ndvi2020_clip_reclass.tif"
+            ndvi2020_polygons = ndviWorkspace + "\\ndvi2020_polygons.shp"
+            arcpy.RasterToPolygon_conversion(reclass_ndvi2020, ndvi2020_polygons)
+            print("- shapefile for 2020 converted to polygons")
+
+            # add fields
+            arcpy.AddField_management(ndvi2020_polygons, "VEG_DESC", "TEXT", "", "", 35, "VEG_DESC")
+            print("- veg field created")
+            arcpy.AddField_management(ndvi2020_polygons, "YEAR", "TEXT", "", "", 4, "YEAR")
+            print("- year field created")
+
+            # update cursor
+            fc = ndvi2020_polygons
+            fields = ["gridcode", "VEG_DESC"]
+            with arcpy.da.UpdateCursor(fc, fields) as cursor:
+                for row in cursor:
+                    if row[0] == 1:
+                        row[1] = "Bare Earth"
+                    if row[0] == 2:
+                        row[1] = "Sparse Vegetation"
+                    if row[0] == 3:
+                        row[1] = "Heavy Vegetation"
+                    cursor.updateRow(row)
+            print("- field updated")
+
+            # calculate year field
+            fc = ndvi2020_polygons
+            fields = ["gridcode", "YEAR"]
+            with arcpy.da.UpdateCursor(fc, fields) as cursor:
+                for row in cursor:
+                    if row[0] < 4:
+                        row[1] = "2020"
+                    cursor.updateRow(row)
+            print("- year field updated")
+        except Exception as ex:
+            print(ex)
+    except Exception as ex:
+        print(ex)
+    # trying 2021 NDVI
+    try:
+        # establish parameters for ndvi
+        ndviWorkspace = arcpy.env.workspace + "\\LandsatNDVI"
+        terrainWorkspace = arcpy.env.workspace + "\\Terrain"
+        landsat2022file = ndviWorkspace + "\\2021\\LC08_L1TP_035034_20210202_20210303_02_T1_MTL.txt"
+        ndvi2021file = outputData + "\\ndvi2021File.tif"
+        try:
+            # process ndvi file
+            ndvi_raster = arcpy.ia.NDVI(landsat2022file, 5, 4)
+            ndvi_raster.save(ndvi2021file)
+            print("- 2022 NDVI raster created and saved")
+
+            # clip ndvi file
+            ndvi2021_clip = avyGDB + "\\ndvi2022_clip"
+            arcpy.Clip_management(ndvi2021file, projectBoundary, ndvi2021_clip)
+            print("- 2022 ndvi file clipped")
+
+            # reclassify ndvi file
+            reclass_ndvi2022 = Reclassify(ndvi2021_clip, "Value", RemapRange([[-1, 0, "NODATA"], [0, 0.1, 1],
+                                                                              [0.1, 0.5, 2], [0.5, 1, 3]]))
+            reclass_ndvi2022.save(ndviWorkspace + "\\ndvi2022_clip_reclass.tif")
+            print("- ndvi 2022 reclassified")
+
+            # create polygons
+            reclass_ndvi2021 = ndviWorkspace + "\\ndvi2021_clip_reclass.tif"
+            ndvi2021_polygons = ndviWorkspace + "\\ndvi2021_polygons.shp"
+            arcpy.RasterToPolygon_conversion(reclass_ndvi2021, ndvi2021_polygons)
+            print("- shapefile for 2022 converted to polygons")
+
+            # add fields
+            arcpy.AddField_management(ndvi2021_polygons, "VEG_DESC", "TEXT", "", "", 35, "VEG_DESC")
+            print("- field created")
+            arcpy.AddField_management(ndvi2021_polygons, "YEAR", "TEXT", "", "", 4, "YEAR")
+            print("- year field created")
+
+            # update cursor
+            fc = ndvi2021_polygons
+            fields = ["Value", "VEG_DESC"]
+            with arcpy.da.UpdateCursor(fc, fields) as cursor:
+                for row in cursor:
+                    if row[0] == 1:
+                        row[1] = "Bare Earth"
+                    if row[0] == 2:
+                        row[1] = "Sparse Vegetation"
+                    if row[0] == 3:
+                        row[1] = "Heavy Vegetation"
+                    cursor.updateRow(row)
+            print("- field updated")
+
+            # calculate year field
+            fc = ndvi2021_polygons
+            fields = ["gridcode", "YEAR"]
+            with arcpy.da.UpdateCursor(fc, fields) as cursor:
+                for row in cursor:
+                    row[1] = "2021"
+                    cursor.updateRow(row)
+            print("- year field updated")
+        except Exception as ex:
+            print(ex)
+    except Exception as ex:
+        print(ex)
+    # trying 2022 NDVI
+    try:
+        # establish parameters for ndvi
+        ndviWorkspace = arcpy.env.workspace + "\\LandsatNDVI"
+        terrainWorkspace = arcpy.env.workspace + "\\Terrain"
+        landsat2022file = ndviWorkspace + "\\2022\\LC09_L1TP_035034_20220128_20230430_02_T1_MTL.txt"
+        ndvi2022file = outputData + "\\ndvi2022File.tif"
+        try:
+            # process ndvi file
+            ndvi_raster = arcpy.ia.NDVI(landsat2022file, 5, 4)
+            ndvi_raster.save(ndvi2022file)
+            print("- 2022 NDVI raster created and saved")
+
+            # clip ndvi file
+            ndvi2022_clip = avyGDB + "\\ndvi2022_clip"
+            arcpy.Clip_management(ndvi2022file, projectBoundary, ndvi2022_clip)
+            print("- 2022 ndvi file clipped")
+
+            # reclassify ndvi file
+            reclass_ndvi2022 = Reclassify(ndvi2022_clip, "Value", RemapRange([[-1, 0, "NODATA"], [0, 0.1, 1],
+                                                                              [0.1, 0.5, 2], [0.5, 1, 3]]))
+            reclass_ndvi2022.save(ndviWorkspace + "\\ndvi2022_clip_reclass.tif")
+            print("- ndvi 2022 reclassified")
+
+            # create polygons
+            reclass_ndvi2022 = ndviWorkspace + "\\ndvi2022_clip_reclass.tif"
+            ndvi2022_polygons = ndviWorkspace + "\\ndvi2022_polygons.shp"
+            arcpy.RasterToPolygon_conversion(reclass_ndvi2022, ndvi2022_polygons)
+            print("- shapefile for 2022 converted to polygons")
+
+            # add fields
+            arcpy.AddField_management(ndvi2022_polygons, "VEG_DESC", "TEXT", "", "", 35, "VEG_DESC")
+            print("- field created")
+            arcpy.AddField_management(ndvi2022_polygons, "YEAR", "TEXT", "", "", 4, "YEAR")
+            print("- year field created")
+
+            # update cursor
+            fc = ndvi2022_polygons
+            fields = ["Value", "VEG_DESC"]
+            with arcpy.da.UpdateCursor(fc, fields) as cursor:
+                for row in cursor:
+                    if row[0] == 1:
+                        row[1] = "Bare Earth"
+                    if row[0] == 2:
+                        row[1] = "Sparse Vegetation"
+                    if row[0] == 3:
+                        row[1] = "Heavy Vegetation"
+                    cursor.updateRow(row)
+            print("- field updated")
+
+            # calculate year field
+            fc = ndvi2022_polygons
+            fields = ["gridcode", "YEAR"]
+            with arcpy.da.UpdateCursor(fc, fields) as cursor:
+                for row in cursor:
+                    row[1] = "2022"
+                    cursor.updateRow(row)
+            print("- year field updated")
+        except Exception as ex:
+            print(ex)
+    except Exception as ex:
+        print(ex)
+    # trying 2023 NDVI
+    try:
+        # establish parameters for ndvi
+        ndviWorkspace = arcpy.env.workspace + "\\LandsatNDVI"
+        terrainWorkspace = arcpy.env.workspace + "\\Terrain"
+        landsat2023file = ndviWorkspace + "\\2023\\LC09_L1TP_035034_20230131_20230311_02_T1_MTL"
+        ndvi2023file = outputData + "\\ndvi2023File.tif"
+        try:
+            # process ndvi file
+            ndvi_raster = arcpy.ia.NDVI(landsat2023file, 5, 4)
+            ndvi_raster.save(ndvi2023file)
+            print("- 2022 NDVI raster created and saved")
+
+            # clip ndvi file
+            ndvi2023_clip = avyGDB + "\\ndvi2023_clip"
+            arcpy.Clip_management(ndvi2023file, projectBoundary, ndvi2023_clip)
+            print("- 2022 ndvi file clipped")
+
+            # reclassify ndvi file
+            reclass_ndvi2023 = Reclassify(ndvi2023_clip, "Value", RemapRange([[-1, 0, "NODATA"], [0, 0.1, 1],
+                                                                              [0.1, 0.5, 2], [0.5, 1, 3]]))
+            reclass_ndvi2023.save(ndviWorkspace + "\\ndvi2023_clip_reclass.tif")
+            print("- ndvi 2022 reclassified")
+
+            # create polygons
+            reclass_ndvi2023 = ndviWorkspace + "\\ndvi2023_clip_reclass.tif"
+            ndvi2023_polygons = ndviWorkspace + "\\ndvi2023_polygons.shp"
+            arcpy.RasterToPolygon_conversion(reclass_ndvi2023, ndvi2023_polygons)
+            print("- shapefile for 2022 converted to polygons")
+
+            # add fields
+            arcpy.AddField_management(ndvi2023_polygons, "VEG_DESC", "TEXT", "", "", 35, "VEG_DESC")
+            print("- field created")
+            arcpy.AddField_management(ndvi2023_polygons, "YEAR", "TEXT", "", "", 4, "YEAR")
+            print("- year field created")
+
+            # update cursor
+            fc = ndvi2023_polygons
+            fields = ["Value", "VEG_DESC"]
+            with arcpy.da.UpdateCursor(fc, fields) as cursor:
+                for row in cursor:
+                    if row[0] == 1:
+                        row[1] = "Bare Earth"
+                    if row[0] == 2:
+                        row[1] = "Sparse Vegetation"
+                    if row[0] == 3:
+                        row[1] = "Heavy Vegetation"
+                    cursor.updateRow(row)
+            print("- field updated")
+
+            # calculate year field
+            fc = ndvi2023_polygons
+            fields = ["gridcode", "YEAR"]
+            with arcpy.da.UpdateCursor(fc, fields) as cursor:
+                for row in cursor:
+                    row[1] = "2023"
+                    cursor.updateRow(row)
+            print("- year field updated")
+        except Exception as ex:
+            print(ex)
+    except Exception as ex:
+        print(ex)
+    # merge ndvi polygons
+    try:
+        ndvi2018_clip = avyGDB + "\\ndvi2018_clip"
+        ndvi2018_clip_pj = avyGDB + "\\ndvi2018_clip_pj"
+        arcpy.ProjectRaster_management(ndvi2018_clip, ndvi2018_clip_pj, PCSsr)
+        print("- 2018 clipped ndvi raster projected")
+
+        ndvi2019_clip = avyGDB + "\\ndvi2019_clip"
+        ndvi2019_clip_pj = avyGDB + "\\ndvi2019_clip_pj"
+        arcpy.ProjectRaster_management(ndvi2019_clip, ndvi2019_clip_pj, PCSsr)
+        print("- 2019 clipped ndvi raster projected")
+
+        ndvi2020_clip = avyGDB + "\\ndvi2020_clip"
+        ndvi2020_clip_pj = avyGDB + "\\ndvi2020_clip_pj"
+        arcpy.ProjectRaster_management(ndvi2020_clip, ndvi2020_clip_pj, PCSsr)
+        print("- 2020 clipped ndvi raster projected")
+
+        ndvi2021_clip = avyGDB + "\\ndvi2021_clip"
+        ndvi2021_clip_pj = avyGDB + "\\ndvi2021_clip_pj"
+        arcpy.ProjectRaster_management(ndvi2021_clip, ndvi2021_clip_pj, PCSsr)
+        print("- 2021 clipped ndvi raster projected")
+
+        ndvi2022_clip = avyGDB + "\\ndvi2022_clip"
+        ndvi2022_clip_pj = avyGDB + "\\ndvi2022_clip_pj"
+        arcpy.ProjectRaster_management(ndvi2022_clip, ndvi2022_clip_pj, PCSsr)
+        print("- 2022 clipped ndvi raster projected")
+
+        ndvi2023_clip = avyGDB + "\\ndvi2023_clip"
+        ndvi2023_clip_pj = avyGDB + "\\ndvi2023_clip_pj"
+        arcpy.ProjectRaster_management(ndvi2023_clip, ndvi2023_clip_pj, PCSsr)
+        print("- 2023 clipped ndvi raster projected")
+    except Exception as ex:
+        print(ex)
+    try:
+        # establish local parameters
+        ndviWorkspace = arcpy.env.workspace + "\\LandsatNDVI"
+        ndvi2018_polygons = ndviWorkspace + "\\ndvi2018_polygons.shp"
+        ndvi2019_polygons = ndviWorkspace + "\\ndvi2019_polygons.shp"
+        ndvi2020_polygons = ndviWorkspace + "\\ndvi2020_polygons.shp"
+        ndvi2021_polygons = ndviWorkspace + "\\ndvi2021_polygons.shp"
+        ndvi2022_polygons = ndviWorkspace + "\\ndvi2022_polygons.shp"
+        ndvi2023_polygons = ndviWorkspace + "\\ndvi2023_polygons.shp"
+        ndviPolygons_all = ndviWorkspace + "\\ndvi_polygons_all.shp"
+        ndvi2018file = outputData + "\\ndvi2018File.tif"
+        reclass_ndvi2018 = ndviWorkspace + "\\ndvi2018_clip_reclass.tif"
+        ndvi2019file = outputData + "\\ndvi2019File.tif"
+        reclass_ndvi2019 = ndviWorkspace + "\\ndvi2019_clip_reclass.tif"
+        ndvi2020file = outputData + "\\ndvi2020File.tif"
+        reclass_ndvi2020 = ndviWorkspace + "\\ndvi2020_clip_reclass.tif"
+        ndvi2021file = outputData + "\\ndvi2021File.tif"
+        reclass_ndvi2021 = ndviWorkspace + "\\ndvi2021_clip_reclass.tif"
+        ndvi2022file = outputData + "\\ndvi2022File.tif"
+        reclass_ndvi2022 = ndviWorkspace + "\\ndvi2022_clip_reclass.tif"
+        ndvi2023file = outputData + "\\ndvi2022File.tif"
+        reclass_ndvi2023 = ndviWorkspace + "\\ndvi2023_clip_reclass.tif"
+        ndvi2018_clip = avyGDB + "\\ndvi2018_clip"
+        ndvi2019_clip = avyGDB + "\\ndvi2019_clip"
+        ndvi2020_clip = avyGDB + "\\ndvi2020_clip"
+        ndvi2021_clip = avyGDB + "\\ndvi2021_clip"
+        ndvi2022_clip = avyGDB + "\\ndvi2022_clip"
+        ndvi2023_clip = avyGDB + "\\ndvi2023_clip"
+
+        try:
+            # delete excess ndvi files
+            arcpy.Delete_management([ndvi2021_polygons, ndvi2023_polygons, ndvi2018_polygons, ndvi2019_polygons, ndvi2020_polygons,
+                                     ndvi2022_polygons, ndviPolygons_all, ndvi2021file, ndvi2023file, reclass_ndvi2021, reclass_ndvi2023, ndvi2018file,
+                                     reclass_ndvi2018, ndvi2019file, reclass_ndvi2019, ndvi2020file, reclass_ndvi2020,
+                                     ndvi2022file, reclass_ndvi2022, ndvi2021_clip, ndvi2023_clip, ndvi2018_clip, ndvi2019_clip,
+                                     ndvi2020_clip, ndvi2022_clip])
+            print("- individual ndvi files deleted")
+        except Exception as ex:
+            print(ex)
+    except Exception as ex:
+        print(ex)
+except Exception as ex:
+    print(ex)
+print("vegetation classifications and polygons created. Woo!")
+
+# aggregate files for HRRR and sample.
+print("aggregating HRRR files")
+try:
+    winter18HRRR_rs = HRRRData + "\\17-18winterHRRR.crf"
+    winter19HRRR_rs = HRRRData + "\\18-19winterHRRR.crf"
+    winter20HRRR_rs = HRRRData + "\\19-20winterHRRR.crf"
+    winter21HRRR_rs = HRRRData + "\\20-21winterHRRR.crf"
+    winter22HRRR_rs = HRRRData + "\\21-22winterHRRR.crf"
+    # 2018 hrrr aggregating
+    try:
+        meanHRRRFile18 = HRRRData + "\\2018\\2018meanHRRRVariables.crf"
+        minHRRRFile18 = HRRRData + "\\2018\\2018minHRRRVariables.crf"
+        maxHRRRFile18 = HRRRData + "\\2018\\2018maxHRRRVariables.crf"
+        sumHRRRFile18 = HRRRData + "\\2018\\2018sumHRRRVariables.crf"
+        windHRRRFile18 = HRRRData + "\\2018\\2018windHRRRVariables.crf"
+        windHRRRFile18_Z = HRRRData + "\\2018\\2018windHRRRVariables_z10.crf"
+        try:
+            meanVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMean = arcpy.ia.AggregateMultidimensionalRaster(winter18HRRR_rs, "StdTime", "MEAN", meanVariables,
+                                                               "INTERVAL_KEYWORD", "DAILY")
+            aggMean.save(meanHRRRFile18)
+            print("- 2018 mean files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            minVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMin = arcpy.ia.AggregateMultidimensionalRaster(winter18HRRR_rs, "StdTime", "MINIMUM", minVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggMin.save(minHRRRFile18)
+            print("- 2018 min files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            maxVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMax = arcpy.ia.AggregateMultidimensionalRaster(winter18HRRR_rs, "StdTime", "MAXIMUM", maxVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggMax.save(maxHRRRFile18)
+            print("- 2018 max files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            sumVariables = ["ASNOW@SFC", "SNOWC@SFC"]
+            aggSum = arcpy.ia.AggregateMultidimensionalRaster(winter18HRRR_rs, "StdTime", "SUM", sumVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggSum.save(sumHRRRFile18)
+            print("- 2018 sum files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            windVariables = ["UGRD@HTGL", "VGRD@HTGL"]
+            aggWind = arcpy.ia.AggregateMultidimensionalRaster(winter18HRRR_rs, "StdTime", "MEAN", windVariables,
+                                                               "INTERVAL_KEYWORD", "DAILY")
+            aggWind.save(windHRRRFile18)
+            print("- 2018 wind variables aggregated")
+
+            arcpy.SubsetMultidimensionalRaster_md(windHRRRFile18, windHRRRFile18_Z, windVariables, "BY_RANGES",
+                                                  "StdZ 10")
+            print("- 2018 wind variables subset")
+
+            arcpy.Delete_management(windHRRRFile18)
+            print("- 2018 original wind file deleted")
+        except Exception as ex:
+            print(ex)
+    except Exception as ex:
+        print(ex)
+    print("moving on to 2019 data")
+    # 2019 hrrr aggregating
+    try:
+        meanHRRRFile19 = HRRRData + "\\2019\\2019meanHRRRVariables.crf"
+        minHRRRFile19 = HRRRData + "\\2019\\2019minHRRRVariables.crf"
+        maxHRRRFile19 = HRRRData + "\\2019\\2019maxHRRRVariables.crf"
+        sumHRRRFile19 = HRRRData + "\\2019\\2019sumHRRRVariables.crf"
+        windHRRRFile19 = HRRRData + "\\2019\\2019windHRRRVariables.crf"
+        windHRRRFile19_Z = HRRRData + "\\2019\\2019windHRRRVariables_z10.crf"
+
+        try:
+            meanVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMean = arcpy.ia.AggregateMultidimensionalRaster(winter19HRRR_rs, "StdTime", "MEAN", meanVariables,
+                                                               "INTERVAL_KEYWORD", "DAILY")
+            aggMean.save(meanHRRRFile19)
+            print("- 2019 mean files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            minVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMin = arcpy.ia.AggregateMultidimensionalRaster(winter19HRRR_rs, "StdTime", "MINIMUM", minVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggMin.save(minHRRRFile19)
+            print("- 2019 min files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            maxVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMax = arcpy.ia.AggregateMultidimensionalRaster(winter19HRRR_rs, "StdTime", "MAXIMUM", maxVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggMax.save(maxHRRRFile19)
+            print("- 2019 max files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            sumVariables = ["ASNOW@SFC", "SNOWC@SFC"]
+            aggSum = arcpy.ia.AggregateMultidimensionalRaster(winter19HRRR_rs, "StdTime", "SUM", sumVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggSum.save(sumHRRRFile19)
+            print("- 2019 sum files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            windVariables = ["UGRD@HTGL", "VGRD@HTGL"]
+            aggWind = arcpy.ia.AggregateMultidimensionalRaster(winter19HRRR_rs, "StdTime", "MEAN", windVariables,
+                                                               "INTERVAL_KEYWORD", "DAILY")
+            aggWind.save(windHRRRFile19)
+            print("- 2019 wind variables aggregated")
+
+            arcpy.SubsetMultidimensionalRaster_md(windHRRRFile19, windHRRRFile19_Z, windVariables, "BY_RANGES",
+                                                  "StdZ 10")
+            print("- 2019 wind variables subset")
+
+            arcpy.Delete_management(windHRRRFile19)
+            print("- 2019 original wind file deleted")
+        except Exception as ex:
+            print(ex)
+    except Exception as ex:
+        print(ex)
+    print("moving on to 2020 data")
+    # 2020 hrrr aggregating
+    try:
+        meanHRRRFile20 = HRRRData + "\\2020\\2020meanHRRRVariables.crf"
+        minHRRRFile20 = HRRRData + "\\2020\\2020minHRRRVariables.crf"
+        maxHRRRFile20 = HRRRData + "\\2020\\2020maxHRRRVariables.crf"
+        sumHRRRFile20 = HRRRData + "\\2020\\2020sumHRRRVariables.crf"
+        windHRRRFile20 = HRRRData + "\\2020\\2020windHRRRVariables.crf"
+        windHRRRFile20_Z = HRRRData + "\\2020\\2020windHRRRVariables_z10.crf"
+
+        try:
+            meanVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMean = arcpy.ia.AggregateMultidimensionalRaster(winter20HRRR_rs, "StdTime", "MEAN", meanVariables,
+                                                               "INTERVAL_KEYWORD", "DAILY")
+            aggMean.save(meanHRRRFile20)
+            print("- 2020 mean files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            minVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMin = arcpy.ia.AggregateMultidimensionalRaster(winter20HRRR_rs, "StdTime", "MINIMUM", minVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggMin.save(minHRRRFile20)
+            print("- 2020 min files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            maxVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMax = arcpy.ia.AggregateMultidimensionalRaster(winter20HRRR_rs, "StdTime", "MAXIMUM", maxVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggMax.save(maxHRRRFile20)
+            print("- 2020 max files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            sumVariables = ["ASNOW@SFC", "SNOWC@SFC"]
+            aggSum = arcpy.ia.AggregateMultidimensionalRaster(winter20HRRR_rs, "StdTime", "SUM", sumVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggSum.save(sumHRRRFile20)
+            print("- 2020 sum files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            windVariables = ["UGRD@HTGL", "VGRD@HTGL"]
+            aggWind = arcpy.ia.AggregateMultidimensionalRaster(winter20HRRR_rs, "StdTime", "MEAN", windVariables,
+                                                               "INTERVAL_KEYWORD", "DAILY")
+            aggWind.save(windHRRRFile20)
+            print("- 2020 wind variables aggregated")
+
+            arcpy.SubsetMultidimensionalRaster_md(windHRRRFile20, windHRRRFile20_Z, windVariables, "BY_RANGES",
+                                                  "StdZ 10")
+            print("- 2020 wind variables subset")
+
+            arcpy.Delete_management(windHRRRFile20)
+            print("- 2020 original wind file deleted")
+        except Exception as ex:
+            print(ex)
+    except Exception as ex:
+        print(ex)
+    # 2017 hrrr aggregating
+    try:
+        meanHRRRFile21 = HRRRData + "\\2021\\2021meanHRRRVariables.crf"
+        minHRRRFile21 = HRRRData + "\\2021\\2021minHRRRVariables.crf"
+        maxHRRRFile21 = HRRRData + "\\2021\\2021maxHRRRVariables.crf"
+        sumHRRRFile21 = HRRRData + "\\2021\\2021sumHRRRVariables.crf"
+        windHRRRFile21 = HRRRData + "\\2021\\2021windHRRRVariables.crf"
+        windHRRRFile21_Z = HRRRData + "\\2021\\2021windHRRRVariables_z10.crf"
+        try:
+            meanVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMean = arcpy.ia.AggregateMultidimensionalRaster(winter21HRRR_rs, "StdTime", "MEAN", meanVariables,
+                                                               "INTERVAL_KEYWORD", "DAILY")
+            aggMean.save(meanHRRRFile21)
+            print("2021 mean variables aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            minVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMin = arcpy.ia.AggregateMultidimensionalRaster(winter21HRRR_rs, "StdTime", "MINIMUM", minVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggMin.save(minHRRRFile21)
+            print("2021 min variables aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            maxVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMax = arcpy.ia.AggregateMultidimensionalRaster(winter21HRRR_rs, "StdTime", "MAXIMUM", maxVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggMax.save(maxHRRRFile21)
+            print("2021 max variables aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            sumVariables = ["ASNOW@SFC", "SNOWC@SFC"]
+            aggSum = arcpy.ia.AggregateMultidimensionalRaster(winter21HRRR_rs, "StdTime", "SUM", sumVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggSum.save(sumHRRRFile21)
+            print("- 2021 sum variables aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            windVariables = ["UGRD@HTGL", "VGRD@HTGL"]
+            aggWind = arcpy.ia.AggregateMultidimensionalRaster(winter21HRRR_rs, "StdTime", "MEAN", windVariables,
+                                                               "INTERVAL_KEYWORD", "DAILY")
+            aggWind.save(windHRRRFile21)
+            print("- 2021 wind variables aggregated")
+
+            arcpy.SubsetMultidimensionalRaster_md(windHRRRFile21, windHRRRFile21_Z, windVariables, "BY_RANGES",
+                                                  "StdZ 10")
+            print("- 2021 wind variables subset")
+
+            arcpy.Delete_management(windHRRRFile21)
+            print("- 2021 original wind file deleted")
+        except Exception as ex:
+            print(ex)
+    except Exception as ex:
+        print(ex)
+    # 2022 hrrr aggregating
+    print("moving on to 2022 data")
+    try:
+        meanHRRRFile22 = HRRRData + "\\2022\\2022meanHRRRVariables.crf"
+        minHRRRFile22 = HRRRData + "\\2022\\2022minHRRRVariables.crf"
+        maxHRRRFile22 = HRRRData + "\\2022\\2022maxHRRRVariables.crf"
+        sumHRRRFile22 = HRRRData + "\\2022\\2022sumHRRRVariables.crf"
+        windHRRRFile22 = HRRRData + "\\2022\\2022windHRRRVariables.crf"
+        windHRRRFile22_Z = HRRRData + "\\2022\\2022windHRRRVariables_z10.crf"
+
+        try:
+            meanVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMean = arcpy.ia.AggregateMultidimensionalRaster(winter22HRRR_rs, "StdTime", "MEAN", meanVariables,
+                                                               "INTERVAL_KEYWORD", "DAILY")
+            aggMean.save(meanHRRRFile22)
+            print("- 2022 mean files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            minVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMin = arcpy.ia.AggregateMultidimensionalRaster(winter22HRRR_rs, "StdTime", "MINIMUM", minVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggMin.save(minHRRRFile22)
+            print("- 2022 min files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            maxVariables = ["GUST@SFC", "SFCR@SFC", "SNOD@SFC", "TMP@HTGL", "TMP@SFC", "WIND@HTGL"]
+            aggMax = arcpy.ia.AggregateMultidimensionalRaster(winter22HRRR_rs, "StdTime", "MAXIMUM", maxVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggMax.save(maxHRRRFile22)
+            print("- 2022 max files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            sumVariables = ["ASNOW@SFC", "SNOWC@SFC"]
+            aggSum = arcpy.ia.AggregateMultidimensionalRaster(winter22HRRR_rs, "StdTime", "SUM", sumVariables,
+                                                              "INTERVAL_KEYWORD", "DAILY")
+            aggSum.save(sumHRRRFile22)
+            print("- 2022 sum files aggregated")
+        except Exception as ex:
+            print(ex)
+
+        try:
+            windVariables = ["UGRD@HTGL", "VGRD@HTGL"]
+            aggWind = arcpy.ia.AggregateMultidimensionalRaster(winter22HRRR_rs, "StdTime", "MEAN", windVariables,
+                                                               "INTERVAL_KEYWORD", "DAILY")
+            aggWind.save(windHRRRFile22)
+            print("- 2022 wind variables aggregated")
+
+            arcpy.SubsetMultidimensionalRaster_md(windHRRRFile22, windHRRRFile22_Z, windVariables, "BY_RANGES",
+                                                  "StdZ 10")
+            print("- 2022 wind variables subset")
+
+            arcpy.Delete_management(windHRRRFile22)
+            print("- 2022 original wind file deleted")
+        except Exception as ex:
+            print(ex)
+    except Exception as ex:
+        print(ex)
+except Exception as ex:
+    print(ex)
