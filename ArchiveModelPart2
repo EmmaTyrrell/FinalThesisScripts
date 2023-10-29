@@ -1,14 +1,17 @@
 # By Emma Tyrrell
-# Completed September 20, 2023, for Master's Thesis in Spatial Data Science
-# at Penn State University.
+#
+# Completed  for Master's Thesis in Spatial Data Science at Penn State University.
 
-# Description: This script takes a shapefile of avalanche paths on U.S. 550
-# and analyzes non-avalanche days to serve as a control sample for an
-# archive avalanche analysis.
-
-# Data sources: Colorado Avalanche Information Center, National Oceanic
+# Description: This script is part 2 of a 5 part process that analyzes avalanche data with HRRR model weather data for the purpose
+# of creating a forecast model. The script analyzes non-avalanche data as a control data set for this project's other
+# key datasets, naturally-triggered highway avalanches along highway paths. The aforementioned script is
+# ArchiveModel1.py should be run to perform the same analysis on naturally occurring highway samples.
+#
+# Data Sources: Colorado Avalanche Information Center, National Oceanic
 # and Atmospheric Association - High-Resolution Rapid Refresh Model,
 # Esri ArcGIS Pro.
+#
+######################################################################################################################
 
 # import modules
 import arcpy
@@ -18,21 +21,68 @@ from datetime import timedelta
 from datetime import datetime as dt
 print("modules imported")
 
+#######################################################################################################################
+# This section is responsible for setting all the new parameters. This model is required to have point
+# shapefile of non-avalanche dates. The non-avalanche dates were based on the dates of natural and mitigated avalanches, 
+# provided by the CAIC. This shapefile must have a field named "Date" that has the date format of "m/d/YYYY".
+# These avalanches all correspond to avalanche path codes from a shapefile of avalanche paths provided by the CAIC. 
+# A consolidated .crf HRRR model file is also required for this model that must range from one-week prior to the date 
+# of the first event and goes to two days past the last event.
+#######################################################################################################################
+
 # import parameters
 arcpy.env.workspace = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData"
-avyGDB = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\AvalancheFiles.gdb"
+avyGDB = arcpy.env.workspace + "\\AvalancheFiles.gdb"
 sampledGDB = "D:\\PSU_Thesis_Data\\IntermediaryProcessingFiles\\NonAvyDays_Sampled.gdb"
-HRRRData = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\HRRRData"
-AvyDataWorkspace = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\AvyData\\Non_AvyDaysData"
+HRRRData = arcpy.env.workspace + "\\HRRRData"
+AvyDataWorkspace = arcpy.env.workspace + "\\AvyData\\Non_AvyDaysData"
 AnalysisData = "D:\\PSU_Thesis_Data\\IntermediaryProcessingFiles\\NonAvyDays_AnalysisData"
-analysisGDB = "C:\\Users\\Emma Tyrrell\\Documents\\PSU_SDS\\THESIS_230226\\Data\\WorkingData\\NonAvyDays_AnalysisData.gdb"
+analysisGDB = arcpy.env.workspace + "\\NonAvyDays_AnalysisData.gdb"
+avalancheData = avyGDB + "\\NonAvyDaysSample"
+
+# update HRRR model data files for 2018 to 2022
+meanHRRRFile18 = HRRRData + "\\2018\\2018meanHRRRVariables.crf"
+minHRRRFile18 = HRRRData + "\\2018\\2018minHRRRVariables.crf"
+maxHRRRFile18 = HRRRData + "\\2018\\2018maxHRRRVariables.crf"
+sumHRRRFile18 = HRRRData + "\\2018\\2018sumHRRRVariables.crf"
+windHRRRFile18_Z = HRRRData + "\\2018\\2018windHRRRVariables_z10.crf"
+meanHRRRFile19 = HRRRData + "\\2019\\2019meanHRRRVariables.crf"
+minHRRRFile19 = HRRRData + "\\2019\\2019minHRRRVariables.crf"
+maxHRRRFile19 = HRRRData + "\\2019\\2019maxHRRRVariables.crf"
+sumHRRRFile19 = HRRRData + "\\2019\\2019sumHRRRVariables.crf"
+windHRRRFile19_Z = HRRRData + "\\2019\\2019windHRRRVariables_z10.crf"
+meanHRRRFile20 = HRRRData + "\\2020\\2020meanHRRRVariables.crf"
+minHRRRFile20 = HRRRData + "\\2020\\2020minHRRRVariables.crf"
+maxHRRRFile20 = HRRRData + "\\2020\\2020maxHRRRVariables.crf"
+sumHRRRFile20 = HRRRData + "\\2020\\2020sumHRRRVariables.crf"
+windHRRRFile20_Z = HRRRData + "\\2020\\2020windHRRRVariables_z10.crf"
+meanHRRRFile21 = HRRRData + "\\2021\\2021meanHRRRVariables.crf"
+minHRRRFile21 = HRRRData + "\\2021\\2021minHRRRVariables.crf"
+maxHRRRFile21 = HRRRData + "\\2021\\2021maxHRRRVariables.crf"
+sumHRRRFile21 = HRRRData + "\\2021\\2021sumHRRRVariables.crf"
+windHRRRFile21 = HRRRData + "\\2021\\2021windHRRRVariables.crf"
+windHRRRFile21_Z = HRRRData + "\\2021\\2021windHRRRVariables_z10.crf"
+meanHRRRFile22 = HRRRData + "\\2022\\2022meanHRRRVariables.crf"
+minHRRRFile22 = HRRRData + "\\2022\\2022minHRRRVariables.crf"
+maxHRRRFile22 = HRRRData + "\\2022\\2022maxHRRRVariables.crf"
+sumHRRRFile22 = HRRRData + "\\2022\\2022sumHRRRVariables.crf"
+windHRRRFile22_Z = HRRRData + "\\2022\\2022windHRRRVariables_z10.crf"
+
+# The following parameters state the UTC time conversion and the project's set parameters
 arcpy.env.overwriteOutput = True
 arcpy.env.qualifiedFieldNames = False
-avalancheData = avyGDB + "\\NonAvyDaysSample"
 UTCtimeConversion = timedelta(hours=-7)
+PCSsr = arcpy.SpatialReference(6431)
 print("parameters established")
 
-print("creating shapefiles ... ")
+#######################################################################################################################
+# End of set parameters
+#######################################################################################################################
+
+#######################################################################################################################
+# This section creates fields and populates them for the day of the event up to 7 days prior in the format for the
+# HRRR model that it is "YYYY-MM-DDTHH:MM:SS"
+print("prepping date fields ... ")
 # add field that will be in accordance with the date field
 try:
     arcpy.AddField_management(avalancheData, "AvyDtTm", "TEXT", "", "", "50", "AvyDtTm", "", "REQUIRED")
@@ -109,6 +159,13 @@ try:
 except Exception as ex:
     print(ex)
 print("fields created")
+
+#######################################################################################################################
+# Once the date files are created, individual shapefiles are created for every event as to prevent errors during the
+# sampling tool. This focuses on avalanches from 2018 to 2022 and only January and February. This project's shapefile
+# only ranges from January to February of the data range since it was created for the purposes of this project, 
+# however, this next script section can apply to all date ranges
+#######################################################################################################################
 
 print("creating shapefiles ...")
 # make shapefiles for avalanches
@@ -270,15 +327,15 @@ try:
         print(ex)
 except Exception as ex:
     print(ex)
+    
+#######################################################################################################################
+# The next section samples all the data based on HRRR model data. Please see PrepScriptAvalancheAnalysis.py for info
+# on that process. There are 5 HRRR files that loop over all the data files for the corresponding year
+######################################################################################################################
 
 print("sampling 2018 data ...")
 # 2018 days 0-7 sample
 try:
-    meanHRRRFile18 = HRRRData + "\\2018\\2018meanHRRRVariables.crf"
-    minHRRRFile18 = HRRRData + "\\2018\\2018minHRRRVariables.crf"
-    maxHRRRFile18 = HRRRData + "\\2018\\2018maxHRRRVariables.crf"
-    sumHRRRFile18 = HRRRData + "\\2018\\2018sumHRRRVariables.crf"
-    windHRRRFile18_Z = HRRRData + "\\2018\\2018windHRRRVariables_z10.crf"
     # day 0
     try:
         Sampled2018 = AvyDataWorkspace + "\\2018"
@@ -2047,11 +2104,6 @@ except Exception as ex:
 print("sampling 2019 data ...")
 # 2019 days 0-7 sample
 try:
-    meanHRRRFile19 = HRRRData + "\\2019\\2019meanHRRRVariables.crf"
-    minHRRRFile19 = HRRRData + "\\2019\\2019minHRRRVariables.crf"
-    maxHRRRFile19 = HRRRData + "\\2019\\2019maxHRRRVariables.crf"
-    sumHRRRFile19 = HRRRData + "\\2019\\2019sumHRRRVariables.crf"
-    windHRRRFile19_Z = HRRRData + "\\2019\\2019windHRRRVariables_z10.crf"
     # day 0
     try:
         Sampled2019 = AvyDataWorkspace + "\\2019"
@@ -3820,11 +3872,6 @@ except Exception as ex:
 print("sampling 2020 data ...")
 # 2020 days 0-7 sample
 try:
-    meanHRRRFile20 = HRRRData + "\\2020\\2020meanHRRRVariables.crf"
-    minHRRRFile20 = HRRRData + "\\2020\\2020minHRRRVariables.crf"
-    maxHRRRFile20 = HRRRData + "\\2020\\2020maxHRRRVariables.crf"
-    sumHRRRFile20 = HRRRData + "\\2020\\2020sumHRRRVariables.crf"
-    windHRRRFile20_Z = HRRRData + "\\2020\\2020windHRRRVariables_z10.crf"
     # day 0
     try:
         Sampled2020 = AvyDataWorkspace + "\\2020"
@@ -5593,12 +5640,6 @@ except Exception as ex:
 print("sampling 2021 data ...")
 # 2021 days 0-7 sample
 try:
-    meanHRRRFile21 = HRRRData + "\\2021\\2021meanHRRRVariables.crf"
-    minHRRRFile21 = HRRRData + "\\2021\\2021minHRRRVariables.crf"
-    maxHRRRFile21 = HRRRData + "\\2021\\2021maxHRRRVariables.crf"
-    sumHRRRFile21 = HRRRData + "\\2021\\2021sumHRRRVariables.crf"
-    windHRRRFile21 = HRRRData + "\\2021\\2021windHRRRVariables.crf"
-    windHRRRFile21_Z = HRRRData + "\\2021\\2021windHRRRVariables_z10.crf"
     # day 0
     try:
         Sampled2021 = AvyDataWorkspace + "\\2021"
@@ -7368,11 +7409,6 @@ except Exception as ex:
 print("sampling 2022 data ...")
 # 2022 days 0-7 sample
 try:
-    meanHRRRFile22 = HRRRData + "\\2022\\2022meanHRRRVariables.crf"
-    minHRRRFile22 = HRRRData + "\\2022\\2022minHRRRVariables.crf"
-    maxHRRRFile22 = HRRRData + "\\2022\\2022maxHRRRVariables.crf"
-    sumHRRRFile22 = HRRRData + "\\2022\\2022sumHRRRVariables.crf"
-    windHRRRFile22_Z = HRRRData + "\\2022\\2022windHRRRVariables_z10.crf"
     # day 0
     try:
         Sampled2022 = AvyDataWorkspace + "\\2022"
@@ -9138,6 +9174,12 @@ try:
     print("Day 7 done. 2022 is done.")
 except Exception as ex:
     print(ex)
+
+#######################################################################################################################
+# This next section compiles all the individual daily files together, renames them and adds them to an analysis
+# forecast geodatabased along with summary statistics on all the avalanches on all the variables sampled by the
+# HRRR model sampling.
+#######################################################################################################################
 
 print("aggregating data and gathering statistics ...")
 # get summary statistics:
@@ -11352,5 +11394,3 @@ try:
         print(ex)
 except Exception as ex:
     print(ex)
-
-
